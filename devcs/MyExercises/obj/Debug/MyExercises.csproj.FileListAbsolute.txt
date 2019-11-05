@@ -1,0 +1,7 @@
+C:\Users\nvolf\Google Drive 2\5th Year (Masters) Modules\First Semester\AM6007 - Scientific Computing with Numerical Examples - 100% CA\Tutorials\devcs\MyExercises\obj\Debug\MyExercises.csprojAssemblyReference.cache
+C:\Users\nvolf\Google Drive 2\5th Year (Masters) Modules\First Semester\AM6007 - Scientific Computing with Numerical Examples - 100% CA\Tutorials\devcs\MyExercises\obj\Debug\MyExercises.csproj.CoreCompileInputs.cache
+C:\Users\nvolf\Google Drive 2\5th Year (Masters) Modules\First Semester\AM6007 - Scientific Computing with Numerical Examples - 100% CA\Tutorials\devcs\MyExercises\bin\Debug\MyExercises.exe.config
+C:\Users\nvolf\Google Drive 2\5th Year (Masters) Modules\First Semester\AM6007 - Scientific Computing with Numerical Examples - 100% CA\Tutorials\devcs\MyExercises\bin\Debug\MyExercises.exe
+C:\Users\nvolf\Google Drive 2\5th Year (Masters) Modules\First Semester\AM6007 - Scientific Computing with Numerical Examples - 100% CA\Tutorials\devcs\MyExercises\bin\Debug\MyExercises.pdb
+C:\Users\nvolf\Google Drive 2\5th Year (Masters) Modules\First Semester\AM6007 - Scientific Computing with Numerical Examples - 100% CA\Tutorials\devcs\MyExercises\obj\Debug\MyExercises.exe
+C:\Users\nvolf\Google Drive 2\5th Year (Masters) Modules\First Semester\AM6007 - Scientific Computing with Numerical Examples - 100% CA\Tutorials\devcs\MyExercises\obj\Debug\MyExercises.pdb
