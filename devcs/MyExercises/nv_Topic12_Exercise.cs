@@ -1,7 +1,7 @@
 ﻿using System;
 
 
-namespace nvolfango_Topic12_Exercises
+namespace nv_Topic12_Exercise
 {
 	// Monte Carlo Integration
 	class MonteCarloIntegration
