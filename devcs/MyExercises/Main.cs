@@ -22,7 +22,7 @@ namespace MyExercises
 			int nCols = 3;
 
 			MatrixClass m1 = new MatrixClass(nRows, nCols);
-			MatrixClass m2 = new MatrixClass(new double[,] { { 1,2,3 }, { 4,5,6 }, { 7,8,9 } });
+			MatrixClass m2 = new MatrixClass(new double[,] { { 1, 2, 3 }, { 4, 5, 6 }, { 7, 8, 9 } });
 
 			Console.WriteLine("First matrix:");
 			m1.DisplayMatrix();
@@ -37,7 +37,7 @@ namespace MyExercises
 			m2.DisplayMatrix();
 
 			Console.WriteLine("Swapping row {0} and row {1}", r1, r2);
-			m2.SwapRows(r1,r2);
+			m2.SwapRows(r1, r2);
 
 			Console.WriteLine("Matrix after swap:");
 			m2.DisplayMatrix();
