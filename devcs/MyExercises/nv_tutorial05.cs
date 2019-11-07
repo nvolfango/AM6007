@@ -159,6 +159,7 @@ namespace nv_MatrixClass
 
 			return product_matrix;
 		}
+
 		public static MatrixClass Add(MatrixClass m1, MatrixClass m2)
 		{
 			if (!((m1.nRows == m2.nRows) & (m1.nCols == m2.nCols)))
