@@ -24,7 +24,7 @@ namespace nv_MatrixClass
 			nCols = values.GetLength(1);
 		}
 
-		// Getters
+		// Getters/Setters
 		public int RowCount
 		{
 			get { return nRows; }
@@ -33,6 +33,12 @@ namespace nv_MatrixClass
 		public int ColumnCount
 		{
 			get { return nCols; }
+		}
+
+		public double[,] Values
+		{
+			get { return values; }
+			set { values = value; }
 		}
 	
 
@@ -126,6 +132,67 @@ namespace nv_MatrixClass
 				values[r, c1] = values[r, c2];
 				values[r, c2] = tmp;
 			}
+		}
+
+		public static MatrixClass Multiply(MatrixClass m1, MatrixClass m2)
+		{
+			if (m1.nCols != m2.nRows)
+			{
+				throw new Exception("Error: Matrix dimensions are invalid for matrix multiplication");
+			}
+
+			MatrixClass product_matrix = new MatrixClass(m1.nRows, m2.nCols);
+			double product_sum;
+
+			for (int r = 0; r < m1.nRows; r++)
+			{
+				for (int c = 0; c < m2.nCols; c++)
+				{
+					product_sum = 0;
+					for (int i = 0; i < m1.nCols; i++)
+					{
+						product_sum += m1.Values[r, i] * m2.Values[i, c];
+					}
+					product_matrix.Values[r, c] = product_sum;
+				}
+			}
+
+			return product_matrix;
+		}
+		public static MatrixClass Add(MatrixClass m1, MatrixClass m2)
+		{
+			if (!((m1.nRows == m2.nRows) & (m1.nCols == m2.nCols)))
+			{
+				throw new Exception("Matrix dimensions are invalid for matrix addition");
+			}
+
+			for (int r = 0; r < m1.nRows; r++)
+			{
+				for (int c = 0; c < m1.nCols; c++)
+				{
+					m1.Values[r, c] += m2.Values[r, c];
+				}
+			}
+
+			return m1;
+		}
+
+		public static MatrixClass Subtract(MatrixClass m1, MatrixClass m2)
+		{
+			if (!((m1.nRows == m2.nRows) & (m1.nCols == m2.nCols)))
+			{
+				throw new Exception("Matrix dimensions are invalid for matrix addition");
+			}
+
+			for (int r = 0; r < m1.nRows; r++)
+			{
+				for (int c = 0; c < m1.nCols; c++)
+				{
+					m1.Values[r, c] -= m2.Values[r, c];
+				}
+			}
+
+			return m1;
 		}
 	}
 }

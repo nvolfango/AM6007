@@ -61,6 +61,33 @@ namespace MyExercises
 
 			Console.WriteLine("Matrix after transpose:");
 			m2.DisplayMatrix();
+
+			// Multiplication
+			Console.WriteLine("Matrix before multiplication (with itself):");
+			m2.DisplayMatrix();
+
+			MatrixClass m3 = MatrixClass.Multiply(m2, m2);
+
+			Console.WriteLine("Product from matrix multiplication:");
+			m3.DisplayMatrix();
+
+			// Addition
+			Console.WriteLine("Matrix before addition (with itself):");
+			m2.DisplayMatrix();
+
+			MatrixClass m4 = MatrixClass.Add(m2, m2);
+
+			Console.WriteLine("Sum from matrix addition:");
+			m4.DisplayMatrix();
+
+			// Subtraction
+			Console.WriteLine("Matrix before subtraction (from itself):");
+			m2.DisplayMatrix();
+
+			MatrixClass m5 = MatrixClass.Subtract(m2, m2);
+
+			Console.WriteLine("Difference from matrix subtraction:");
+			m5.DisplayMatrix();
 		}
 	}
 }
