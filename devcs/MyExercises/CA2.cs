@@ -8,7 +8,11 @@ namespace nvolfango_CA2
 	{
 		public static void MainProgram()
 		{
-			CsvReader data = new CsvReader(@"Z:\AM6007\My GitHub\devcs\MyExercises\Datasets\test_file_linear_equations.csv", header:false);
+			bool header = false;
+			string ucc_filename = @"Z:\AM6007\My GitHub\devcs\MyExercises\Datasets\test_file_linear_equations.csv";
+			string home_filename = @"C:\Users\nvolf\Google Drive 2\5th Year (Masters) Modules\First Semester\AM6007 - Scientific Computing with Numerical Examples - 100% CA\Tutorials\My GitHub\devcs\MyExercises\Datasets\test_file_linear_equations.csv";
+
+			CsvReader data = new CsvReader(home_filename, header);
 			
 			Matrix matrix = new Matrix(data.Values);
 			matrix.DisplayMatrix();
@@ -220,7 +224,7 @@ namespace nvolfango_CA2
 		//		A is a matrix consisting of the first n columns of the matrix parameter
 		//		x is the vector of variables
 		//		b is the last column of the matrix parameter
-		public Matrix Solve(string method, Matrix matrix, double tolerance=1E-2, int max_iters=1000)
+		public static Matrix Solve(string method, Matrix matrix, double tolerance=1E-2, int max_iters=1000)
 		{
 			Matrix A = new Matrix(matrix.nRows, matrix.nCols-1);
 			Matrix x0 = new Matrix(matrix.nRows, 1);
@@ -251,7 +255,6 @@ namespace nvolfango_CA2
 				b.Values[r, 1] = matrix.Values[r, matrix.nCols-1];
 			}
 
-
 			if (method == "Jacobi")
 			{
 				Matrix R = OffDiagonals(A);
@@ -271,20 +274,32 @@ namespace nvolfango_CA2
 			}
 			else if (method == "Gauss-Seidel")
 			{
-				Matrix R = OffDiagonals(A);
-				Matrix D = Diagonals(A);
+				Matrix L = Triangle(matrix, "Lower");
+				Matrix D = Diagonals(matrix);
+				Matrix U = Triangle(matrix, "Upper");
+
+				Matrix Ld = Add(L, D);
+				Matrix Ld_inv = LowerTriangularInverse(Ld);
+
+				double error;
+
+				do
+				{
+					x1 = Multiply(Ld_inv, Subtract(b, Multiply(U, x0)));
+					error = Norm(Subtract(Multiply(A, x1), b));
+					x0 = x1;
+					iters++;
+				}
+				while (iters < max_iters & error < tolerance);
 				
 			}
 
 			return x1;
 		}
 
-
-		// Private Methods
-
 		// Returns a matrix consisting of the diagonals of the input matrix,
 		// with off-diagonal elements set to zero.
-		Matrix Diagonals(Matrix matrix)
+		public static Matrix Diagonals(Matrix matrix)
 		{
 			Matrix diagonal_matrix = new Matrix(matrix.nRows, matrix.nCols);
 			int min_dimension = Math.Min(matrix.nRows, matrix.nCols);
@@ -297,9 +312,39 @@ namespace nvolfango_CA2
 			return diagonal_matrix;
 		}
 
+		// Returns a matrix consisting of the the upper/lower triangle
+		// of the input matrix, with other elements set to zero.
+		public static Matrix Triangle(Matrix matrix, string shape)
+		{
+			Matrix triangle = new Matrix(matrix.nRows, matrix.nCols);
+
+			if (shape == "Upper")
+			{
+				for (int r = 1; r < matrix.nRows; r++)
+				{
+					for (int c = 0; c < r; c++)
+					{
+						triangle.Values[r, c] = matrix.Values[r, c];
+					}
+				}
+			}
+			else if (shape == "Lower")
+			{
+				for (int c = 1; c < matrix.nCols; c++)
+				{
+					for (int r = 0; r < c; r++)
+					{
+						triangle.Values[r, c] = matrix.Values[r, c];
+					}
+				}
+			}
+			
+			return triangle;
+		}
+
 		// Returns a matrix consisting of the off-diagonal vlues of the input matrix,
 		// with elements on the diagonal set to zero.
-		Matrix OffDiagonals(Matrix matrix)
+		public static Matrix OffDiagonals(Matrix matrix)
 		{
 			Matrix off_diagonal_matrix = new Matrix(matrix.nRows, matrix.nCols);
 			
@@ -318,7 +363,7 @@ namespace nvolfango_CA2
 		}
 
 		// Returns a matrix consisting of the inverse of a diagonal matrix.
-		Matrix InvertDiagonalMatrix(Matrix matrix)
+		public static Matrix InvertDiagonalMatrix(Matrix matrix)
 		{
 			int min_dimension = Math.Min(matrix.nRows, matrix.nCols);
 			for (int i = 0; i < min_dimension; i++)
@@ -329,7 +374,7 @@ namespace nvolfango_CA2
 			return matrix;
 		}
 
-		bool IsDiagonallyDominant(Matrix matrix)
+		public static bool IsDiagonallyDominant(Matrix matrix)
 		{
 			ulong absolute_diagonal_value;
 			ulong absolute_sum;
@@ -367,7 +412,7 @@ namespace nvolfango_CA2
 		}
 
 		//Calculates the norm of a vector
-		double Norm(Matrix vector)
+		public static double Norm(Matrix vector)
 		{
 			double norm;
 			double sum = 0;
@@ -389,7 +434,7 @@ namespace nvolfango_CA2
 		//	return true;
 		//}
 
-		bool IsSymmetric(Matrix matrix)
+		public static bool IsSymmetric(Matrix matrix)
 		{
 			// Check if matrix is square
 			if (matrix.nRows != matrix.nCols - 1)
@@ -414,7 +459,14 @@ namespace nvolfango_CA2
 			return true;
 		}
 
-		Matrix Rref(Matrix matrix)
+		//Matrix Rref(Matrix matrix)
+		//{
+
+		//}
+
+		// Calculates the inverse of a matrix, assuming the matrix is already lower triangular form.
+		// Returns the calculated inverse matrix.
+		public static Matrix LowerTriangularInverse(Matrix matrix)
 		{
 
 		}
