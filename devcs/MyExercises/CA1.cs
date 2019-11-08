@@ -45,7 +45,7 @@ namespace CA1
 {
 	class nvolfango_CA1
 	{
-		public static void Main(string[] args)
+		public static void MainProgram()
 		{
 
 			// Part 1:
