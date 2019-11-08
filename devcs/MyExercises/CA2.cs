@@ -13,6 +13,16 @@ namespace nvolfango_CA2
 			
 		}
 	}
+	
+	class GaussSeidelMethod
+	{
+
+	}
+
+	class JacobiMethod
+	{
+
+	}
 
 	class Matrix
 	{
@@ -194,7 +204,7 @@ namespace nvolfango_CA2
 		{
 			if (!((m1.nRows == m2.nRows) & (m1.nCols == m2.nCols)))
 			{
-				throw new Exception("Matrix dimensions are invalid for matrix addition");
+				throw new Exception("Matrix dimensions are invalid for matrix subtraction");
 			}
 
 			for (int r = 0; r < m1.nRows; r++)
