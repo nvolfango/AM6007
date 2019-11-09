@@ -25,6 +25,7 @@ namespace nvolfango_CA2
 		// Properties
 		private int nRows, nCols;
 		private double[,] values;
+		const double zero_tolerance = 1E-4;
 
 
 		// Constructor for matrix of 0's
@@ -64,6 +65,21 @@ namespace nvolfango_CA2
 
 
 		// Public Methods
+
+		// Constructor for identity matrix
+		public static Matrix IdentityMatrix(int square_dimension)
+		{
+			Matrix eye_matrix = new Matrix(square_dimension, square_dimension); ;
+
+			for (int i = 0; i < square_dimension; i++)
+			{
+				eye_matrix.Values[i, i] = 1;
+			}
+
+			return eye_matrix;
+		}
+
+
 		public void DisplayMatrix()
 		{
 			Console.WriteLine();
@@ -77,6 +93,7 @@ namespace nvolfango_CA2
 			}
 			Console.WriteLine();
 		}
+
 
 		public void Transpose()
 		{
@@ -112,6 +129,7 @@ namespace nvolfango_CA2
 			}
 		}
 
+
 		public void SwapRows(int r1, int r2)
 		{
 			if (r1 >= nRows)
@@ -134,6 +152,7 @@ namespace nvolfango_CA2
 
 		}
 
+
 		public void SwapColumns(int c1, int c2)
 		{
 			if (c1 >= nCols)
@@ -154,6 +173,7 @@ namespace nvolfango_CA2
 				values[r, c2] = tmp;
 			}
 		}
+
 
 		public static Matrix Multiply(Matrix m1, Matrix m2)
 		{
@@ -181,6 +201,7 @@ namespace nvolfango_CA2
 			return product_matrix;
 		}
 
+
 		public static Matrix Add(Matrix m1, Matrix m2)
 		{
 			if (!((m1.nRows == m2.nRows) & (m1.nCols == m2.nCols)))
@@ -198,6 +219,7 @@ namespace nvolfango_CA2
 
 			return m1;
 		}
+
 
 		public static Matrix Subtract(Matrix m1, Matrix m2)
 		{
@@ -224,7 +246,7 @@ namespace nvolfango_CA2
 		//		A is a matrix consisting of the first n columns of the matrix parameter
 		//		x is the vector of variables
 		//		b is the last column of the matrix parameter
-		public static Matrix Solve(string method, Matrix matrix, double tolerance=1E-2, int max_iters=1000)
+		public static Matrix Solve(string method, Matrix matrix, int max_iters=1000)
 		{
 			Matrix A = new Matrix(matrix.nRows, matrix.nCols-1);
 			Matrix x0 = new Matrix(matrix.nRows, 1);
@@ -269,7 +291,7 @@ namespace nvolfango_CA2
 					x0 = x1;
 					iters++;
 				}
-				while (iters < max_iters & error < tolerance);
+				while (iters < max_iters & error < zero_tolerance);
 
 			}
 			else if (method == "Gauss-Seidel")
@@ -279,7 +301,7 @@ namespace nvolfango_CA2
 				Matrix U = Triangle(matrix, "Upper");
 
 				Matrix Ld = Add(L, D);
-				Matrix Ld_inv = LowerTriangularInverse(Ld);
+				Matrix Ld_inv = InvertLowerTriangularMatrix(Ld);
 
 				double error;
 
@@ -290,12 +312,13 @@ namespace nvolfango_CA2
 					x0 = x1;
 					iters++;
 				}
-				while (iters < max_iters & error < tolerance);
+				while (iters < max_iters & error < zero_tolerance);
 				
 			}
 
 			return x1;
 		}
+
 
 		// Returns a matrix consisting of the diagonals of the input matrix,
 		// with off-diagonal elements set to zero.
@@ -311,6 +334,7 @@ namespace nvolfango_CA2
 
 			return diagonal_matrix;
 		}
+
 
 		// Returns a matrix consisting of the the upper/lower triangle
 		// of the input matrix, with other elements set to zero.
@@ -342,6 +366,7 @@ namespace nvolfango_CA2
 			return triangle;
 		}
 
+
 		// Returns a matrix consisting of the off-diagonal vlues of the input matrix,
 		// with elements on the diagonal set to zero.
 		public static Matrix OffDiagonals(Matrix matrix)
@@ -362,17 +387,28 @@ namespace nvolfango_CA2
 			return off_diagonal_matrix;
 		}
 
+
 		// Returns a matrix consisting of the inverse of a diagonal matrix.
 		public static Matrix InvertDiagonalMatrix(Matrix matrix)
 		{
-			int min_dimension = Math.Min(matrix.nRows, matrix.nCols);
-			for (int i = 0; i < min_dimension; i++)
+			Matrix inverse_matrix = new Matrix(matrix.nRows, matrix.nCols);
+
+			for (int i = 0; i < matrix.nCols; i++)
 			{
-				matrix.Values[i, i] = 1 / matrix.Values[i, i];
+				if (matrix.Values[i, i] < zero_tolerance)
+				{
+					throw new Exception("Error: Matrix is not invertible. Cannot find a solution via the Jacobi method.");
+				}
 			}
 
-			return matrix;
+			for (int i = 0; i < matrix.nRows; i++)
+			{
+				inverse_matrix.Values[i, i] = 1 / matrix.Values[i, i];
+			}
+
+			return inverse_matrix;
 		}
+
 
 		public static bool IsDiagonallyDominant(Matrix matrix)
 		{
@@ -411,6 +447,7 @@ namespace nvolfango_CA2
 			return true;
 		}
 
+
 		//Calculates the norm of a vector
 		public static double Norm(Matrix vector)
 		{
@@ -427,12 +464,6 @@ namespace nvolfango_CA2
 			return norm;
 		}
 
-		//bool IsPostiveDefinite(Matrix matrix)
-		//{
-
-
-		//	return true;
-		//}
 
 		public static bool IsSymmetric(Matrix matrix)
 		{
@@ -459,18 +490,47 @@ namespace nvolfango_CA2
 			return true;
 		}
 
-		//Matrix Rref(Matrix matrix)
-		//{
-
-		//}
 
 		// Calculates the inverse of a matrix, assuming the matrix is already lower triangular form.
 		// Returns the calculated inverse matrix.
-		public static Matrix LowerTriangularInverse(Matrix matrix)
+		public static Matrix InvertLowerTriangularMatrix(Matrix matrix)
 		{
+			Matrix inverse_matrix = IdentityMatrix(matrix.nRows);
 
+			for (int i = 0; i < matrix.nCols; i++)
+			{
+				if (matrix.Values[i, i] < zero_tolerance)
+				{
+					throw new Exception("Error: Matrix is not invertible. Cannot find a solution via the Gauss-Seidel method.");
+				}
+			}
+
+			for (int c = 0; c < matrix.nCols; c++)
+			{
+				double diagonal_value = matrix.Values[c, c];
+
+				if (diagonal_value != 1)
+				{
+					ScaleRow(ref inverse_matrix, c, 1/diagonal_value);
+				}
+
+				for (int r1 = c + 1; r1 < matrix.nRows; r1++)
+				{
+					inverse_matrix.Values[r1, c] -= matrix.Values[r1, c] * inverse_matrix.Values[c, c];
+				}
+			}
+
+			return inverse_matrix;
 		}
 
+
+		public static void ScaleRow(ref Matrix matrix, int row, double scale_value)
+		{
+			for (int c = 0; c < matrix.nCols; c++)
+			{
+				matrix.Values[row, c] *= scale_value;
+			}
+		}
 	}
 
 	class CsvReader
