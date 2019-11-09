@@ -16,7 +16,6 @@ namespace nvolfango_CA2
 			
 			Matrix matrix = new Matrix(data.Values);
 			matrix.DisplayMatrix();
-			
 		}
 	}
 
