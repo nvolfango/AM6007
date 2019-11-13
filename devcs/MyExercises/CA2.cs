@@ -12,10 +12,12 @@ namespace nvolfango_CA2
 			string ucc_filename = @"Z:\AM6007\My GitHub\devcs\MyExercises\Datasets\test_file_linear_equations.csv";
 			string home_filename = @"C:\Users\nvolf\Google Drive 2\5th Year (Masters) Modules\First Semester\AM6007 - Scientific Computing with Numerical Examples - 100% CA\Tutorials\My GitHub\devcs\MyExercises\Datasets\test_file_linear_equations.csv";
 
-			CsvReader data = new CsvReader(home_filename, header);
+			CsvReader data = new CsvReader(ucc_filename, header);
 			
 			Matrix matrix = new Matrix(data.Values);
 			matrix.DisplayMatrix();
+			Matrix solution_matrix = Matrix.Solve("Jacobi", matrix);
+			solution_matrix.DisplayMatrix();
 		}
 	}
 
@@ -24,7 +26,8 @@ namespace nvolfango_CA2
 		// Properties
 		private int nRows, nCols;
 		private double[,] values;
-		const double zero_tolerance = 1E-4;
+		const double zero_tolerance = 1E-3;
+		const double error_tolerance = 1E-5;
 
 
 		// Constructor for matrix of 0's
@@ -267,13 +270,13 @@ namespace nvolfango_CA2
 			for (int r = 0; r < x0.nRows; r++)
 			{
 				// Random initial values between -10 and 10
-				x0.Values[r, 1] = rand.NextDouble()*20 - 10;
+				x0.Values[r, 0] = rand.NextDouble()*20 - 10;
 			}
 
 			// Populate matrix b with values from original matrix parameter
 			for (int r = 0; r < b.nRows; r++)
 			{
-				b.Values[r, 1] = matrix.Values[r, matrix.nCols-1];
+				b.Values[r, 0] = matrix.Values[r, matrix.nCols-1];
 			}
 
 			if (method == "Jacobi")
@@ -290,7 +293,7 @@ namespace nvolfango_CA2
 					x0 = x1;
 					iters++;
 				}
-				while (iters < max_iters & error < zero_tolerance);
+				while ((iters < max_iters) & (Math.Abs(error) > error_tolerance));
 
 			}
 			else if (method == "Gauss-Seidel")
@@ -391,10 +394,10 @@ namespace nvolfango_CA2
 		public static Matrix InvertDiagonalMatrix(Matrix matrix)
 		{
 			Matrix inverse_matrix = new Matrix(matrix.nRows, matrix.nCols);
-
+			
 			for (int i = 0; i < matrix.nCols; i++)
 			{
-				if (matrix.Values[i, i] < zero_tolerance)
+				if (Math.Abs(matrix.Values[i, i]) < zero_tolerance)
 				{
 					throw new Exception("Error: Matrix is not invertible. Cannot find a solution via the Jacobi method.");
 				}
@@ -455,7 +458,7 @@ namespace nvolfango_CA2
 
 			for (int r = 0; r < vector.nRows; r++)
 			{
-				sum += vector.Values[r, 1] * vector.Values[r, 1];
+				sum += vector.Values[r, 0] * vector.Values[r, 0];
 			}
 
 			norm = Math.Sqrt(sum);
@@ -498,7 +501,7 @@ namespace nvolfango_CA2
 
 			for (int i = 0; i < matrix.nCols; i++)
 			{
-				if (matrix.Values[i, i] < zero_tolerance)
+				if (Math.Abs(matrix.Values[i, i]) < zero_tolerance)
 				{
 					throw new Exception("Error: Matrix is not invertible. Cannot find a solution via the Gauss-Seidel method.");
 				}
