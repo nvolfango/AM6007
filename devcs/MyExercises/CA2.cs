@@ -12,10 +12,10 @@ namespace nvolfango_CA2
 			string ucc_filename = @"Z:\AM6007\My GitHub\devcs\MyExercises\Datasets\test_file_linear_equations.csv";
 			string home_filename = @"C:\Users\nvolf\Google Drive 2\5th Year (Masters) Modules\First Semester\AM6007 - Scientific Computing with Numerical Examples - 100% CA\Tutorials\My GitHub\devcs\MyExercises\Datasets\test_file_linear_equations.csv";
 
-			CsvReader data = new CsvReader(ucc_filename, header);
+			CsvReader data = new CsvReader(home_filename, header);
 			
 			Matrix matrix = new Matrix(data.Values);
-			matrix.DisplayMatrix();
+			
 			Matrix solution_matrix = Matrix.Solve("Jacobi", matrix);
 			solution_matrix.DisplayMatrix();
 		}
@@ -89,7 +89,7 @@ namespace nvolfango_CA2
 			{
 				for (int c = 0; c < nCols; c++)
 				{
-					Console.Write("{0,5}", values[r, c]);
+					Console.Write("{0,7}", (Math.Round(values[r, c], 3)));
 				}
 				Console.WriteLine();
 			}
@@ -278,23 +278,26 @@ namespace nvolfango_CA2
 			{
 				b.Values[r, 0] = matrix.Values[r, matrix.nCols-1];
 			}
-
+			
 			if (method == "Jacobi")
 			{
 				Matrix R = OffDiagonals(A);
 				Matrix D = Diagonals(A);
 				Matrix D_inv = InvertDiagonalMatrix(D);
 				double error;
-
+				A.DisplayMatrix();
+				R.DisplayMatrix();
+				D.DisplayMatrix();
+				D_inv.DisplayMatrix();
+				b.DisplayMatrix();
 				do
 				{
 					x1 = Multiply(D_inv, Subtract(b, Multiply(R, x0)));
 					error = Norm(Subtract(Multiply(A, x1), b));
-					x0 = x1;
+					x0.values = x1.values;
 					iters++;
 				}
 				while ((iters < max_iters) & (Math.Abs(error) > error_tolerance));
-
 			}
 			else if (method == "Gauss-Seidel")
 			{
@@ -311,7 +314,7 @@ namespace nvolfango_CA2
 				{
 					x1 = Multiply(Ld_inv, Subtract(b, Multiply(U, x0)));
 					error = Norm(Subtract(Multiply(A, x1), b));
-					x0 = x1;
+					x0.Values = x1.Values;
 					iters++;
 				}
 				while (iters < max_iters & error < zero_tolerance);
