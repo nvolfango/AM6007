@@ -9,15 +9,17 @@ namespace nvolfango_CA2
 		public static void MainProgram()
 		{
 			bool header = false;
-			string ucc_filename = @"Z:\AM6007\My GitHub\devcs\MyExercises\Datasets\test_file_linear_equations.csv";
+			string ucc_filename = @"Z:\AM6007\My GitHub\devcs\MyExercises\Datasets\test_file_linear_equations5.csv";
 			string home_filename = @"C:\Users\nvolf\Google Drive 2\5th Year (Masters) Modules\First Semester\AM6007 - Scientific Computing with Numerical Examples - 100% CA\Tutorials\My GitHub\devcs\MyExercises\Datasets\test_file_linear_equations.csv";
 
-			CsvReader data = new CsvReader(home_filename, header);
+			CsvReader data = new CsvReader(ucc_filename, header);
 			
 			Matrix matrix = new Matrix(data.Values);
 			
-			Matrix solution_matrix = Matrix.Solve("Jacobi", matrix);
-			solution_matrix.DisplayMatrix();
+			Matrix Jsolution_matrix = Matrix.Solve("Jacobi", matrix);
+			Jsolution_matrix.DisplayMatrix();
+			Matrix GSsolution_matrix = Matrix.Solve("Gauss-Seidel", matrix);
+			GSsolution_matrix.DisplayMatrix();
 		}
 	}
 
@@ -26,7 +28,7 @@ namespace nvolfango_CA2
 		// Properties
 		private int nRows, nCols;
 		private double[,] values;
-		const double zero_tolerance = 1E-3;
+		const double zero_tolerance = 1E-8;
 		const double error_tolerance = 1E-5;
 
 
@@ -136,11 +138,13 @@ namespace nvolfango_CA2
 		{
 			if (r1 >= nRows)
 			{
-				throw new ArgumentException("Error: Invalid first argument");
+				Console.WriteLine("Error: Invalid first argument");
+				Environment.Exit(-1);
 			}
 			else if (r2 >= nRows)
 			{
-				throw new ArgumentException("Error: Invalid second argument");
+				Console.WriteLine("Error: Invalid second argument");
+				Environment.Exit(-1);
 			}
 
 			double tmp;
@@ -159,11 +163,13 @@ namespace nvolfango_CA2
 		{
 			if (c1 >= nCols)
 			{
-				throw new ArgumentException("Error: Invalid first argument");
+				Console.WriteLine("Error: Invalid first argument");
+				Environment.Exit(-1);
 			}
 			else if (c2 >= nCols)
 			{
-				throw new ArgumentException("Error: Invalid second argument");
+				Console.WriteLine("Error: Invalid second argument");
+				Environment.Exit(-1);
 			}
 
 			double tmp;
@@ -181,7 +187,8 @@ namespace nvolfango_CA2
 		{
 			if (m1.nCols != m2.nRows)
 			{
-				throw new Exception("Error: Matrix dimensions are invalid for matrix multiplication");
+				Console.WriteLine("Error: Matrix dimensions are invalid for matrix multiplication");
+				Environment.Exit(-1);
 			}
 
 			Matrix product_matrix = new Matrix(m1.nRows, m2.nCols);
@@ -208,18 +215,21 @@ namespace nvolfango_CA2
 		{
 			if (!((m1.nRows == m2.nRows) & (m1.nCols == m2.nCols)))
 			{
-				throw new Exception("Matrix dimensions are invalid for matrix addition");
+				Console.WriteLine("Matrix dimensions are invalid for matrix addition");
+				Environment.Exit(-1);
 			}
+
+			Matrix sum_matrix = new Matrix(m1.nRows, m1.nCols);
 
 			for (int r = 0; r < m1.nRows; r++)
 			{
 				for (int c = 0; c < m1.nCols; c++)
 				{
-					m1.Values[r, c] += m2.Values[r, c];
+					sum_matrix.Values[r, c] = m1.Values[r, c] + m2.Values[r, c];
 				}
 			}
 
-			return m1;
+			return sum_matrix;
 		}
 
 
@@ -227,18 +237,21 @@ namespace nvolfango_CA2
 		{
 			if (!((m1.nRows == m2.nRows) & (m1.nCols == m2.nCols)))
 			{
-				throw new Exception("Matrix dimensions are invalid for matrix subtraction");
+				Console.WriteLine("Matrix dimensions are invalid for matrix subtraction");
+				Environment.Exit(-1);
 			}
+
+			Matrix difference_matrix = new Matrix(m1.nRows, m1.nCols);
 
 			for (int r = 0; r < m1.nRows; r++)
 			{
 				for (int c = 0; c < m1.nCols; c++)
 				{
-					m1.Values[r, c] -= m2.Values[r, c];
+					difference_matrix.Values[r, c] = m1.Values[r, c] - m2.Values[r, c];
 				}
 			}
 
-			return m1;
+			return difference_matrix;
 		}
 
 
@@ -284,12 +297,10 @@ namespace nvolfango_CA2
 				Matrix R = OffDiagonals(A);
 				Matrix D = Diagonals(A);
 				Matrix D_inv = InvertDiagonalMatrix(D);
+				Matrix D_inv_R = Multiply(D_inv, R);
+
 				double error;
-				A.DisplayMatrix();
-				R.DisplayMatrix();
-				D.DisplayMatrix();
-				D_inv.DisplayMatrix();
-				b.DisplayMatrix();
+		
 				do
 				{
 					x1 = Multiply(D_inv, Subtract(b, Multiply(R, x0)));
@@ -298,15 +309,30 @@ namespace nvolfango_CA2
 					iters++;
 				}
 				while ((iters < max_iters) & (Math.Abs(error) > error_tolerance));
+				Console.WriteLine("iters = {0}", iters);
 			}
 			else if (method == "Gauss-Seidel")
 			{
-				Matrix L = Triangle(matrix, "Lower");
-				Matrix D = Diagonals(matrix);
-				Matrix U = Triangle(matrix, "Upper");
+				Matrix L = Triangle(A, "Lower");
+				Matrix D = Diagonals(A);
+				Matrix U = Triangle(A, "Upper");
 
 				Matrix Ld = Add(L, D);
 				Matrix Ld_inv = InvertLowerTriangularMatrix(Ld);
+
+				Console.WriteLine("A");
+				A.DisplayMatrix();
+				Console.WriteLine("L");
+				L.DisplayMatrix();
+				Console.WriteLine("D");
+				D.DisplayMatrix();
+				Console.WriteLine("Ld");
+				Ld.DisplayMatrix();
+				Console.WriteLine("Ld_inv");
+				Ld_inv.DisplayMatrix();
+				Matrix product = Multiply(Ld, Ld_inv);
+				Console.WriteLine("Ld * Ld_inv");
+				product.DisplayMatrix();
 
 				double error;
 
@@ -317,8 +343,8 @@ namespace nvolfango_CA2
 					x0.Values = x1.Values;
 					iters++;
 				}
-				while (iters < max_iters & error < zero_tolerance);
-				
+				while (iters < max_iters & Math.Abs(error) > zero_tolerance);
+				Console.WriteLine("iters = {0}", iters);
 			}
 
 			return x1;
@@ -347,7 +373,7 @@ namespace nvolfango_CA2
 		{
 			Matrix triangle = new Matrix(matrix.nRows, matrix.nCols);
 
-			if (shape == "Upper")
+			if (shape == "Lower")
 			{
 				for (int r = 1; r < matrix.nRows; r++)
 				{
@@ -357,7 +383,7 @@ namespace nvolfango_CA2
 					}
 				}
 			}
-			else if (shape == "Lower")
+			else if (shape == "Upper")
 			{
 				for (int c = 1; c < matrix.nCols; c++)
 				{
@@ -402,7 +428,8 @@ namespace nvolfango_CA2
 			{
 				if (Math.Abs(matrix.Values[i, i]) < zero_tolerance)
 				{
-					throw new Exception("Error: Matrix is not invertible. Cannot find a solution via the Jacobi method.");
+					Console.WriteLine("Error: Matrix is not invertible. Cannot find a solution via the Jacobi method.");
+					Environment.Exit(-1);
 				}
 			}
 
@@ -506,7 +533,8 @@ namespace nvolfango_CA2
 			{
 				if (Math.Abs(matrix.Values[i, i]) < zero_tolerance)
 				{
-					throw new Exception("Error: Matrix is not invertible. Cannot find a solution via the Gauss-Seidel method.");
+					Console.WriteLine("Error: Matrix is not invertible. Cannot find a solution via the Gauss-Seidel method.");
+					Environment.Exit(-1);
 				}
 			}
 
@@ -516,12 +544,15 @@ namespace nvolfango_CA2
 
 				if (diagonal_value != 1)
 				{
-					ScaleRow(ref inverse_matrix, c, 1/diagonal_value);
+					ScaleRow(ref inverse_matrix, c, diagonal_value);
 				}
 
-				for (int r1 = c + 1; r1 < matrix.nRows; r1++)
+				for (int r = c + 1; r < matrix.nRows; r++)
 				{
-					inverse_matrix.Values[r1, c] -= matrix.Values[r1, c] * inverse_matrix.Values[c, c];
+					for (int c1 = 0; c1 < matrix.nCols; c1++)
+					{
+						inverse_matrix.Values[r, c1] -= matrix.Values[r, c1] * inverse_matrix.Values[c, c1];
+					}
 				}
 			}
 
@@ -533,7 +564,7 @@ namespace nvolfango_CA2
 		{
 			for (int c = 0; c < matrix.nCols; c++)
 			{
-				matrix.Values[row, c] *= scale_value;
+				matrix.Values[row, c] /= scale_value;
 			}
 		}
 	}
@@ -665,6 +696,7 @@ namespace nvolfango_CA2
 						catch (System.FormatException)
 						{
 							Console.WriteLine("Error: Wrong delimiter used, or there was at least one invalid value encountered.");
+							Environment.Exit(-1);
 						}
 					}
 					if (num_of_missing_values > 0)
