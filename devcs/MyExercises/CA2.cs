@@ -10,12 +10,12 @@ namespace nvolfango_CA2
 		{
 			bool header = false;
 			string ucc_filename = @"Z:\AM6007\My GitHub\devcs\MyExercises\Datasets\test_file_linear_equations5.csv";
-			string home_filename = @"C:\Users\nvolf\Google Drive 2\5th Year (Masters) Modules\First Semester\AM6007 - Scientific Computing with Numerical Examples - 100% CA\Tutorials\My GitHub\devcs\MyExercises\Datasets\test_file_linear_equations.csv";
+			string home_filename = @"C:\Users\nvolf\Google Drive 2\5th Year (Masters) Modules\First Semester\AM6007 - Scientific Computing with Numerical Examples - 100% CA\Tutorials\My GitHub\devcs\MyExercises\Datasets\test_file_linear_equations4.csv";
 
-			CsvReader data = new CsvReader(ucc_filename, header);
+			CsvReader data = new CsvReader(home_filename, header);
 			
 			Matrix matrix = new Matrix(data.Values);
-			
+
 			Matrix Jsolution_matrix = Matrix.Solve("Jacobi", matrix);
 			Jsolution_matrix.DisplayMatrix();
 			Matrix GSsolution_matrix = Matrix.Solve("Gauss-Seidel", matrix);
@@ -28,8 +28,8 @@ namespace nvolfango_CA2
 		// Properties
 		private int nRows, nCols;
 		private double[,] values;
-		const double zero_tolerance = 1E-8;
-		const double error_tolerance = 1E-5;
+		const double zero_tolerance = 1E-16;
+		const double error_tolerance = 1E-14;
 
 
 		// Constructor for matrix of 0's
@@ -91,7 +91,8 @@ namespace nvolfango_CA2
 			{
 				for (int c = 0; c < nCols; c++)
 				{
-					Console.Write("{0,7}", (Math.Round(values[r, c], 3)));
+					//Console.Write("{0,7}", (Math.Round(values[r, c], 3)));
+					Console.Write("{0,7}", values[r, c]);
 				}
 				Console.WriteLine();
 			}
@@ -261,13 +262,14 @@ namespace nvolfango_CA2
 		//		A is a matrix consisting of the first n columns of the matrix parameter
 		//		x is the vector of variables
 		//		b is the last column of the matrix parameter
-		public static Matrix Solve(string method, Matrix matrix, int max_iters=1000)
+		public static Matrix Solve(string method, Matrix matrix, int max_iters=2000, int max_divergence_count=5)
 		{
 			Matrix A = new Matrix(matrix.nRows, matrix.nCols-1);
 			Matrix x0 = new Matrix(matrix.nRows, 1);
 			Matrix x1 = new Matrix(matrix.nRows, 1);
 			Matrix b = new Matrix(matrix.nRows, 1);
 			int iters = 0;
+			int divergence_count = 0;
 
 			// Populate matrix A with values from original matrix parameter
 			for (int r = 0; r < A.nRows; r++)
@@ -299,17 +301,30 @@ namespace nvolfango_CA2
 				Matrix D_inv = InvertDiagonalMatrix(D);
 				Matrix D_inv_R = Multiply(D_inv, R);
 
-				double error;
+				double error1 = 0;
+				double error2;
 		
 				do
 				{
 					x1 = Multiply(D_inv, Subtract(b, Multiply(R, x0)));
-					error = Norm(Subtract(Multiply(A, x1), b));
+					error2 = Norm(Subtract(Multiply(A, x1), b));
+					if (error2 > error1)
+					{
+						divergence_count++;
+						if (divergence_count == max_divergence_count)
+						{
+							Console.WriteLine("Error: The solution is diverging.");
+							Environment.Exit(-1);
+						}
+					}
 					x0.values = x1.values;
+					
 					iters++;
+					error1 = error2;
 				}
-				while ((iters < max_iters) & (Math.Abs(error) > error_tolerance));
+				while ((iters < max_iters) & (Math.Abs(error2) > error_tolerance));
 				Console.WriteLine("iters = {0}", iters);
+				Console.WriteLine("error: {0}", error2);
 			}
 			else if (method == "Gauss-Seidel")
 			{
@@ -320,31 +335,39 @@ namespace nvolfango_CA2
 				Matrix Ld = Add(L, D);
 				Matrix Ld_inv = InvertLowerTriangularMatrix(Ld);
 
-				Console.WriteLine("A");
-				A.DisplayMatrix();
-				Console.WriteLine("L");
-				L.DisplayMatrix();
-				Console.WriteLine("D");
-				D.DisplayMatrix();
-				Console.WriteLine("Ld");
-				Ld.DisplayMatrix();
-				Console.WriteLine("Ld_inv");
-				Ld_inv.DisplayMatrix();
-				Matrix product = Multiply(Ld, Ld_inv);
-				Console.WriteLine("Ld * Ld_inv");
-				product.DisplayMatrix();
-
-				double error;
+				double error1 = 0;
+				double error2;
 
 				do
 				{
 					x1 = Multiply(Ld_inv, Subtract(b, Multiply(U, x0)));
-					error = Norm(Subtract(Multiply(A, x1), b));
+					error2 = Norm(Subtract(Multiply(A, x1), b));
+					if (error2 > error1)
+					{
+						divergence_count++;
+					}
+					else
+					{
+						divergence_count = 0;
+					}
+					if (divergence_count == max_divergence_count)
+					{
+						Console.WriteLine("Error: The solution is diverging.");
+						Console.WriteLine("iters: {0}", iters);
+						Environment.Exit(-1);
+					}
 					x0.Values = x1.Values;
 					iters++;
+					error1 = error2;
+
+					if (iters == max_iters - 1)
+					{
+						Console.WriteLine("Warning: maximum number of iterations ({0}) reached.", max_iters);
+					}
 				}
-				while (iters < max_iters & Math.Abs(error) > zero_tolerance);
+				while (iters < max_iters & Math.Abs(error2) > zero_tolerance);
 				Console.WriteLine("iters = {0}", iters);
+				Console.WriteLine("error: {0}", error2);
 			}
 
 			return x1;
@@ -549,9 +572,9 @@ namespace nvolfango_CA2
 
 				for (int r = c + 1; r < matrix.nRows; r++)
 				{
-					for (int c1 = 0; c1 < matrix.nCols; c1++)
+					for (int c1 = 0; c1 < c + 1; c1++)
 					{
-						inverse_matrix.Values[r, c1] -= matrix.Values[r, c1] * inverse_matrix.Values[c, c1];
+						inverse_matrix.Values[r, c1] -= matrix.Values[r, c] * inverse_matrix.Values[c, c1];
 					}
 				}
 			}
@@ -567,6 +590,57 @@ namespace nvolfango_CA2
 				matrix.Values[row, c] /= scale_value;
 			}
 		}
+
+		//public static Matrix Submatrix(Matrix matrix, int excluded_row, int excluded_column)
+		//{
+		//	Matrix submatrix = new Matrix(matrix.nRows-1, matrix.nCols-1);
+		//	int r1 = 0;
+		//	int c1;
+
+		//	for (int r = 0; r < matrix.nRows; r++)
+		//	{
+		//		c1 = 0;
+		//		for (int c = 0; c < matrix.nCols; c++)
+		//		{
+		//			if ((r == excluded_row) | (c == excluded_column))
+		//			{
+		//				continue;
+		//			}
+		//			else
+		//			{
+		//				submatrix.Values[r1, c1] = matrix.Values[r, c];
+		//			}
+		//			if (c != excluded_column) c1++;
+		//		}
+		//		if (r != excluded_row) r1++;
+		//	}
+
+		//	return submatrix;
+		//}
+
+		//public static double Determinant(Matrix matrix)
+		//{
+		//	if (matrix.nRows != matrix.nCols)
+		//	{
+		//		Console.WriteLine("Error: Matrix has no determinant.");
+		//		Environment.Exit(-1);
+		//	}
+		//	double determinant = 0;
+		//	double coefficient;
+
+		//	if *matrix.nRows 
+
+		//	for (int r = 0; r < matrix.nRows; r++)
+		//	{
+		//		for (int c = 0; c < matrix.nCols; c++)
+		//		{
+		//			coefficient = c % 2 == 0 ? matrix.Values[r, c] : -matrix.Values[r, c];
+		//			return (coefficient * Determinant(Submatrix(matrix, r, c)));
+		//		}
+		//	}
+
+		//	return determinant;
+		//}
 	}
 
 	class CsvReader
