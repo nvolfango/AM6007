@@ -16,10 +16,20 @@ namespace nvolfango_CA2
 			
 			Matrix matrix = new Matrix(data.Values);
 
-			Matrix Jsolution_matrix = Matrix.Solve("Jacobi", matrix);
+			Matrix GEsolution_matrix1 = Matrix.Solve(matrix, "Gaussian Elimination");
+			GEsolution_matrix1.DisplayMatrix();
+
+			Matrix GEsolution_matrix2 = Matrix.Solve(matrix, "Gaussian Elimination - partial");
+			GEsolution_matrix2.DisplayMatrix();
+
+			Matrix GEsolution_matrix3 = Matrix.Solve(matrix, "Gaussian Elimination - scaled partial");
+			GEsolution_matrix3.DisplayMatrix();
+
+			Matrix Jsolution_matrix = Matrix.Solve(matrix, "Jacobi");
 			Jsolution_matrix.DisplayMatrix();
-			Matrix GSsolution_matrix = Matrix.Solve("Gauss-Seidel", matrix);
-			GSsolution_matrix.DisplayMatrix();
+
+			Matrix GSsolution_matrix = Matrix.Solve(matrix, "Gauss-Seidel");
+			GSsolution_matrix.DisplayMatrix();		
 		}
 	}
 
@@ -262,7 +272,7 @@ namespace nvolfango_CA2
 		//		A is a matrix consisting of the first n columns of the matrix parameter
 		//		x is the vector of variables
 		//		b is the last column of the matrix parameter
-		public static Matrix Solve(string method, Matrix matrix, int max_iters=2000, int max_divergence_count=5)
+		public static Matrix Solve(Matrix matrix, string method, int max_iters=2000, int max_divergence_count=5)
 		{
 			Matrix A = new Matrix(matrix.nRows, matrix.nCols-1);
 			Matrix x0 = new Matrix(matrix.nRows, 1);
@@ -293,8 +303,10 @@ namespace nvolfango_CA2
 			{
 				b.Values[r, 0] = matrix.Values[r, matrix.nCols-1];
 			}
+
+			if 
 			
-			if (method == "Jacobi")
+			else if (method == "Jacobi")
 			{
 				Matrix R = OffDiagonals(A);
 				Matrix D = Diagonals(A);
