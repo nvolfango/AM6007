@@ -8,30 +8,114 @@ namespace nvolfango_CA2
 	{
 		public static void MainProgram()
 		{
-			bool header = false;
-			string ucc_filename = @"Z:\AM6007\My GitHub\devcs\MyExercises\Datasets\test_file_linear_equations5.csv";
-			string home_filename = @"C:\Users\nvolf\Google Drive 2\5th Year (Masters) Modules\First Semester\AM6007 - Scientific Computing with Numerical Examples - 100% CA\Tutorials\My GitHub\devcs\MyExercises\Datasets\test_file_linear_equations4.csv";
+			int[,] A1 = new int[,] { { 1, 1, 1, 1 }, { 1, 1, 2, 3 }, { -1, 0, 2, 1 }, { 3, 2, -1, 0 } };
+			int[] b1 = new int[] { 1, 2, 1, 1 };
 
-			CsvReader data = new CsvReader(home_filename, header);
-			
-			Matrix matrix = new Matrix(data.Values);
+			int[,] A2 = new int[,] { { 3, 1, 4, -1 }, { 2, -2, -1, 2 }, { 5, 7, 14, -8 }, { 1, 3, 2, 4 } };
+			int[] b2 = new int[] { 7, 1, 20, -4 };
 
-			Matrix GEsolution_matrix1 = Matrix.Solve(matrix, "Gaussian Elimination");
-			GEsolution_matrix1.DisplayMatrix();
+			GElim system1 = new GElim(A1, b1);
+			GElim system2 = new GElim(A2, b2);
 
-			Matrix GEsolution_matrix2 = Matrix.Solve(matrix, "Gaussian Elimination - partial");
-			GEsolution_matrix2.DisplayMatrix();
+			system1.PrintLinearSystem();
+			//system2.PrintLinearSystem();
 
-			Matrix GEsolution_matrix3 = Matrix.Solve(matrix, "Gaussian Elimination - scaled partial");
-			GEsolution_matrix3.DisplayMatrix();
+			//Matrix matrix1 = new Matrix(A1);
+			//Matrix matrix1_answer = Matrix.ColumnVector(b1);
+			//Matrix matrix2 = new Matrix(A2);
+			//Matrix matrix2_answer = Matrix.ColumnVector(b2);
+			//matrix1.DisplayMatrix();
+			//matrix1_answer.DisplayMatrix();
+			//matrix2.DisplayMatrix();
+			//matrix2_answer.DisplayMatrix();
 
-			Matrix Jsolution_matrix = Matrix.Solve(matrix, "Jacobi");
-			Jsolution_matrix.DisplayMatrix();
+			//Matrix GEsolution_matrix1 = Matrix.Solve(matrix, "Gaussian Elimination");
+			//GEsolution_matrix1.DisplayMatrix();
 
-			Matrix GSsolution_matrix = Matrix.Solve(matrix, "Gauss-Seidel");
-			GSsolution_matrix.DisplayMatrix();		
+			//Matrix GEsolution_matrix2 = Matrix.Solve(matrix, "Gaussian Elimination - partial");
+			//GEsolution_matrix2.DisplayMatrix();
+
+			//Matrix GEsolution_matrix3 = Matrix.Solve(matrix, "Gaussian Elimination - scaled partial");
+			//GEsolution_matrix3.DisplayMatrix();
+
+			//Matrix Jsolution_matrix = Matrix.Solve(matrix, "Jacobi");
+			//Jsolution_matrix.DisplayMatrix();
+
+			//Matrix GSsolution_matrix = Matrix.Solve(matrix, "Gauss-Seidel");
+			//GSsolution_matrix.DisplayMatrix();		
 		}
 	}
+
+	class GElim
+	{
+		// Properties
+		string pivot_type;
+		bool solution_exists = false;
+		Matrix solution;
+		Matrix A;
+		Matrix b;
+
+		// Constructors
+		public GElim()
+		{
+			// do nothing
+		}
+
+		public GElim(int[,] A, int[] b)
+		{
+			this.A = new Matrix(A);
+			this.b = Matrix.ColumnVector(b);
+			this.solution = Matrix.ColumnVector(Matrix.ZeroVector(4));
+		}
+
+		// Public Methods
+
+		public bool Solve(string pivot_type)
+		{
+			// Must implement Gaussian elimination followed by back substitution
+			return true;
+		}
+
+		public Matrix GetSolution()
+		{
+			return solution;
+		}
+
+		public void PrintLinearSystem()
+		{
+			Console.WriteLine("\nYour system of equations is as follows:\n");
+			for (int r = 0; r < A.RowCount; r++)
+			{
+				for (int c = 0; c < A.ColumnCount; c++)
+				{
+					//Console.Write("{0,7}", (Math.Round(values[r, c], 3)));
+					if (c == 0)
+					{
+						Console.Write("[{0, 2}", A.Values[r, c]);
+					}
+					else
+					{
+						Console.Write("{0,5}", A.Values[r, c]);
+					}
+
+				}
+				Console.Write("] [ x{0} ]{0,7}{1,5}{2,2} ]", "=", "[", r, b.Values[r, 0]);
+				Console.WriteLine();
+			}
+			Console.WriteLine("\nWhere your solution matrix is: given by:\n");
+
+			for (int r = 0; r < A.RowCount; r++)
+			{
+				Console.Write("[ x{0} ]", r);
+				Console.Write("{0,7}{1,5}{2,2} ]", "=", "[", solution.Values[r, 0]);
+				Console.WriteLine();
+			}
+		}
+
+		// Private Methods
+	}
+
+
 
 	class Matrix
 	{
@@ -41,6 +125,11 @@ namespace nvolfango_CA2
 		const double zero_tolerance = 1E-16;
 		const double error_tolerance = 1E-14;
 
+		// Constructor with no inputs
+		public Matrix()
+		{
+			// do nothing
+		}
 
 		// Constructor for matrix of 0's
 		public Matrix(int nRows, int nCols)
@@ -51,10 +140,26 @@ namespace nvolfango_CA2
 		}
 
 
-		// Constructor for when the matrix values are known beforehand
+		// Constructor for when the matrix values are known beforehand (given as array of doubles)
 		public Matrix(double[,] values)
 		{
 			this.values = values;
+			nRows = values.GetLength(0);
+			nCols = values.GetLength(1);
+		}
+
+		// Constructor for when the matrix values are known beforehand (given as array of ints)
+		public Matrix(int[,] values)
+		{
+			double[,] double_values = new double[values.GetLength(0), values.GetLength(1)];
+			for (int r = 0; r < values.GetLength(0); r++)
+			{
+				for (int c = 0; c < values.GetLength(1); c++)
+				{
+					double_values[r, c] = values[r, c];
+				}
+			}
+			this.values = double_values;
 			nRows = values.GetLength(0);
 			nCols = values.GetLength(1);
 		}
@@ -80,10 +185,16 @@ namespace nvolfango_CA2
 
 		// Public Methods
 
-		// Constructor for identity matrix
+		// Zero vector
+		public static double[] ZeroVector(int length)
+		{
+			return new double[length];
+		}
+
+		// Identity matrix
 		public static Matrix IdentityMatrix(int square_dimension)
 		{
-			Matrix eye_matrix = new Matrix(square_dimension, square_dimension); ;
+			Matrix eye_matrix = new Matrix(square_dimension, square_dimension);
 
 			for (int i = 0; i < square_dimension; i++)
 			{
@@ -91,6 +202,56 @@ namespace nvolfango_CA2
 			}
 
 			return eye_matrix;
+		}
+
+		// Row vector
+		public static Matrix RowVector(double[] values)
+		{
+			Matrix row_vector = new Matrix(1, values.Length);
+			
+			for (int c = 0; c < values.Length; c++)
+			{
+				row_vector.values[0, c] = values[c];
+			}
+
+			return row_vector;
+		}
+
+		public static Matrix RowVector(int[] values)
+		{
+			Matrix row_vector = new Matrix(1, values.Length);
+
+			for (int c = 0; c < values.Length; c++)
+			{
+				row_vector.values[0, c] = values[c];
+			}
+
+			return row_vector;
+		}
+
+		// Column vector
+		public static Matrix ColumnVector(double[] values)
+		{
+			Matrix column_vector = new Matrix(values.Length, 1);
+
+			for (int r = 0; r < values.Length; r++)
+			{
+				column_vector.values[r, 0] = values[r];
+			}
+
+			return column_vector;
+		}
+
+		public static Matrix ColumnVector(int[] values)
+		{
+			Matrix column_vector = new Matrix(values.Length, 1);
+
+			for (int r = 0; r < values.Length; r++)
+			{
+				column_vector.values[r, 0] = values[r];
+			}
+
+			return column_vector;
 		}
 
 
@@ -272,9 +433,9 @@ namespace nvolfango_CA2
 		//		A is a matrix consisting of the first n columns of the matrix parameter
 		//		x is the vector of variables
 		//		b is the last column of the matrix parameter
-		public static Matrix Solve(Matrix matrix, string method, int max_iters=2000, int max_divergence_count=5)
+		public static Matrix Solve(Matrix matrix, string method, int max_iters = 2000, int max_divergence_count = 5)
 		{
-			Matrix A = new Matrix(matrix.nRows, matrix.nCols-1);
+			Matrix A = new Matrix(matrix.nRows, matrix.nCols - 1);
 			Matrix x0 = new Matrix(matrix.nRows, 1);
 			Matrix x1 = new Matrix(matrix.nRows, 1);
 			Matrix b = new Matrix(matrix.nRows, 1);
@@ -295,18 +456,18 @@ namespace nvolfango_CA2
 			for (int r = 0; r < x0.nRows; r++)
 			{
 				// Random initial values between -10 and 10
-				x0.Values[r, 0] = rand.NextDouble()*20 - 10;
+				x0.Values[r, 0] = rand.NextDouble() * 20 - 10;
 			}
 
 			// Populate matrix b with values from original matrix parameter
 			for (int r = 0; r < b.nRows; r++)
 			{
-				b.Values[r, 0] = matrix.Values[r, matrix.nCols-1];
+				b.Values[r, 0] = matrix.Values[r, matrix.nCols - 1];
 			}
 
-			if 
-			
-			else if (method == "Jacobi")
+			//if 
+
+			if (method == "Jacobi")
 			{
 				Matrix R = OffDiagonals(A);
 				Matrix D = Diagonals(A);
@@ -315,7 +476,7 @@ namespace nvolfango_CA2
 
 				double error1 = 0;
 				double error2;
-		
+
 				do
 				{
 					x1 = Multiply(D_inv, Subtract(b, Multiply(R, x0)));
@@ -330,7 +491,7 @@ namespace nvolfango_CA2
 						}
 					}
 					x0.values = x1.values;
-					
+
 					iters++;
 					error1 = error2;
 				}
@@ -428,7 +589,7 @@ namespace nvolfango_CA2
 					}
 				}
 			}
-			
+
 			return triangle;
 		}
 
@@ -438,7 +599,7 @@ namespace nvolfango_CA2
 		public static Matrix OffDiagonals(Matrix matrix)
 		{
 			Matrix off_diagonal_matrix = new Matrix(matrix.nRows, matrix.nCols);
-			
+
 			for (int r = 0; r < matrix.nRows; r++)
 			{
 				for (int c = 0; c < matrix.nCols; c++)
@@ -458,7 +619,7 @@ namespace nvolfango_CA2
 		public static Matrix InvertDiagonalMatrix(Matrix matrix)
 		{
 			Matrix inverse_matrix = new Matrix(matrix.nRows, matrix.nCols);
-			
+
 			for (int i = 0; i < matrix.nCols; i++)
 			{
 				if (Math.Abs(matrix.Values[i, i]) < zero_tolerance)
@@ -483,7 +644,7 @@ namespace nvolfango_CA2
 			ulong absolute_sum;
 
 			// Check if matrix is square
-			if (matrix.nRows != matrix.nCols-1)
+			if (matrix.nRows != matrix.nCols - 1)
 			{
 				return false;
 			}
@@ -492,14 +653,14 @@ namespace nvolfango_CA2
 			// sum of the other values in the row
 			for (int r = 0; r < matrix.nRows; r++)
 			{
-				absolute_diagonal_value = (ulong) Math.Abs(matrix.Values[r, r]);
+				absolute_diagonal_value = (ulong)Math.Abs(matrix.Values[r, r]);
 				absolute_sum = 0;
 
-				for (int c = 0; c < matrix.nCols-1; c++)
+				for (int c = 0; c < matrix.nCols - 1; c++)
 				{
 					if (c != r)
 					{
-						absolute_sum += (ulong) Math.Abs(matrix.Values[r, c]);
+						absolute_sum += (ulong)Math.Abs(matrix.Values[r, c]);
 					}
 				}
 
@@ -527,7 +688,7 @@ namespace nvolfango_CA2
 			}
 
 			norm = Math.Sqrt(sum);
-			
+
 			return norm;
 		}
 
@@ -544,7 +705,7 @@ namespace nvolfango_CA2
 			//the corresponding value in the lower triangle.
 			for (int r = 0; r < matrix.nRows; r++)
 			{
-				for (int c = r + 1; c < matrix.nCols-1; c++)
+				for (int c = r + 1; c < matrix.nCols - 1; c++)
 				{
 					if (matrix.Values[r, c] != matrix.Values[c, r])
 					{
@@ -562,7 +723,7 @@ namespace nvolfango_CA2
 		// Returns the calculated inverse matrix.
 		public static Matrix InvertLowerTriangularMatrix(Matrix matrix)
 		{
-			Matrix inverse_matrix = IdentityMatrix(matrix.nRows);
+			Matrix inverse_matrix = Matrix.IdentityMatrix(matrix.nRows);
 
 			for (int i = 0; i < matrix.nCols; i++)
 			{
@@ -653,229 +814,5 @@ namespace nvolfango_CA2
 
 		//	return determinant;
 		//}
-	}
-
-	class CsvReader
-	{
-		/*
-		 * Data members
-		 */
-		string filename;                // Directory and name.extension of the file
-		bool header;                    // Parameter for specifying inclusion of a header
-		string[] header_names;          // Array to store column/header names
-		char delimiter;                 // Parameter to specify type of delimiter.
-		double[,] values;               // Matrix extracted from the file
-		int[] dimensions;               // Two-element array (row count, column count)
-		int row_count, column_count;
-
-
-		/*
-		 * Properties
-		 */
-
-		public double[,] Values
-		{
-			get
-			{
-				return values;
-			}
-		}
-
-		public string[] HeaderNames
-		{
-			get
-			{
-				return header_names;
-			}
-		}
-
-		public bool HasHeader
-		{
-			get
-			{
-				return header;
-			}
-		}
-
-		public string Filename
-		{
-			get
-			{
-				return filename;
-			}
-		}
-
-		public int RowCount
-		{
-			get
-			{
-				return row_count;
-			}
-		}
-
-		public int ColumnCount
-		{
-			get
-			{
-				return column_count;
-			}
-		}
-
-		public char DelimiterType
-		{
-			get
-			{
-				return delimiter;
-			}
-		}
-
-
-		/*
-		 * Constructor
-		 */
-		public CsvReader(string filename, bool header = true, char delimiter = ',')
-		{
-			this.filename = filename;
-			this.header = header;
-			this.delimiter = delimiter;
-
-			// Open file to begin reading data
-			Console.WriteLine("Reading file from directory.");
-			try
-			{
-				using (StreamReader sr = new StreamReader(filename))
-				{
-					string[] line_string;
-					double[] line_array;
-					int num_of_missing_values = 0;
-
-					// Calculate the dimensions from the file
-					dimensions = CsvGetDimensions(filename, header, delimiter);
-					row_count = dimensions[0];
-					column_count = dimensions[1];
-
-					// Populate the 'header_names' array data member if header is specified true.
-					if (header)
-					{
-						header_names = sr.ReadLine().Split(delimiter);
-					}
-
-					// Populate 'values' array with the numerical data from file.
-					values = new double[row_count, column_count];
-					for (int i = 0; i < row_count; i++)
-					{
-						// Extract row i from the file into an array (of strings).
-						line_string = sr.ReadLine().Split(delimiter);
-						num_of_missing_values += (from str in line_string where str == "" select str).Count();
-
-						// Convert to an array of doubles, and replacing missing values with a 0.
-						try
-						{
-							line_array = Array.ConvertAll(line_string, str => str == "" ? 0.0 : double.Parse(str));
-
-							//Fills row i with the values
-							for (int j = 0; j < column_count; j++)
-							{
-								values[i, j] = line_array[j];
-							}
-						}
-						catch (System.FormatException)
-						{
-							Console.WriteLine("Error: Wrong delimiter used, or there was at least one invalid value encountered.");
-							Environment.Exit(-1);
-						}
-					}
-					if (num_of_missing_values > 0)
-					{
-						Console.WriteLine("Warning: {0} values were replaced with a a zero.", num_of_missing_values);
-					}
-					Console.WriteLine("The file was read successfully.\n");
-				}
-			}
-			catch (System.IO.FileNotFoundException)
-			{
-				Console.WriteLine("Error: Specified filename does not exist.");
-				Environment.Exit(-1);
-			}
-		}
-
-
-		/*
-		 * Private Class Methods - Used by either the class constructor or by one or more of the class public methods
-		 */
-
-		// Reads through the file specified by filename and calculates the dimensions of the resulting matrix.
-		static int[] CsvGetDimensions(string filename, bool header = true, char delimiter = ',')
-		{
-			int row_count = 0;
-			int column_count = 0;
-			string[] line;
-			int[] dimensions = new int[2];
-
-			using (StreamReader sr_obj = new StreamReader(filename))
-			{
-				// Iterates through the rows until the end of the file is reached.
-				// Column count is the row with the longest count of values
-				// Row count is the count of lines read in the file.
-				while (!sr_obj.EndOfStream)
-				{
-					line = sr_obj.ReadLine().Split(delimiter);
-					column_count = line.Length > column_count ? line.Length : column_count;
-					row_count++;
-				}
-			}
-
-			// If header = true, the first line of the file is excluded from the row count.
-			row_count = header ? row_count - 1 : row_count;
-
-			dimensions[0] = row_count;
-			dimensions[1] = column_count;
-
-			return dimensions;
-		}
-
-
-		/*
-		 * Public Class Methods - Class methods accessible to the user
-		 */
-
-		// Print out the header names from the file, visualised as an array.
-		public void PrintHeaders()
-		{
-			if (header)
-			{
-				string header_string = String.Join(", ", header_names);
-				Console.WriteLine("[" + header_string + "]");
-			}
-			else
-			{
-				Console.WriteLine("The file has no headers.");
-			}
-		}
-
-		// Print out the values from the file in a nice format.
-		public void PrintValues()
-		{
-			// Print out header names if header = true.
-			if (header)
-			{
-				for (int h = 0; h < column_count; h++)
-				{
-					Console.Write("{0, 6}", header_names[h]);
-				}
-				Console.WriteLine();
-			}
-			for (int i = 0; i < row_count; i++)
-			{
-				for (int j = 0; j < column_count; j++)
-				{
-					Console.Write("{0, 6}", values[i, j]);
-				}
-				Console.WriteLine();
-			}
-		}
-
-
-
 	}
 }
