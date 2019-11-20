@@ -21,12 +21,18 @@ namespace nvolfango_CA2
 			GElim system2 = new GElim(A2, b2);
 			GElim system3 = new GElim(A3, b3);
 
-			//system1.Solve("test");
+			system1.PrintLinearSystem();
+			system1.Solve("none");
+			//system1.GetSolution().DisplayMatrix();
+
+			system2.PrintLinearSystem();
+			system2.Solve("none");
+			//system2.GetSolution().DisplayMatrix();
+
+			system3.PrintLinearSystem();
 			system3.Solve("none");
-			Matrix solution_vector = system3.GetSolution();
-			solution_vector.DisplayMatrix();
-			//system3.PrintLinearSystem();
-			//system2.PrintLinearSystem();
+			//system3.GetSolution().DisplayMatrix();
+			
 
 			//Matrix matrix1 = new Matrix(A1);
 			//Matrix matrix1_answer = Matrix.ColumnVector(b1);
@@ -82,6 +88,11 @@ namespace nvolfango_CA2
 
 		public bool Solve(string pivot_type)
 		{
+			if (solution_exists)
+			{
+				return true;
+			}
+
 			// Must implement Gaussian elimination followed by back substitution
 			Matrix full = Matrix.Join(A, b);
 			int[] pivot_position;
@@ -89,58 +100,68 @@ namespace nvolfango_CA2
 			double val;
 			int num_of_pivots = 0;
 
-			if (pivot_type == "none")
+			// Do Gaussian elimination to reduce the matrix A to upper triangular form.
+			for (int c = 0; c < full.ColumnCount; c++)
 			{
-				// Do Gaussian elimination to reduce the matrix A to upper triangular form.
-				for (int c = 0; c < full.ColumnCount; c++)
+				//full.DisplayMatrix();
+				pivot_position = FindPivot(ref full, pivot_type, ref num_of_pivots, c, c);
+
+				// If the current column does not have a valid pivot, move to the next column.
+				if (c != pivot_position[1])
 				{
-					pivot_position = FindPivot(ref full, ref num_of_pivots, c, c);
+					continue;
+				}
 
-					// If the current column does not have a valid pivot, move to the next column.
-					if (c != pivot_position[1])
-					{
-						continue;
-					}
+				// If next valid pivot is not in the next row, swap the rows.
+				if (num_of_pivots - 1 != pivot_position[0])
+				{
+					full.SwapRows(num_of_pivots - 1, pivot_position[0]);
+					pivot_position[0] = num_of_pivots - 1;
+				}
 
-					// If next valid pivot is not in the next row, swap the rows.
-					if (num_of_pivots-1 != pivot_position[0])
-					{
-						full.SwapRows(num_of_pivots - 1, pivot_position[0]);
-						pivot_position[0] = num_of_pivots - 1;
-					}
+				pivot_value = full.Values[full.RowPos[pivot_position[0]], c];
 
-					pivot_value = full.Values[full.RowPos[pivot_position[0]], c];
+				// If pivot value is not equal to 1, then divide the row by the pivot_value so that pivot_value = 1.
+				if (Math.Abs(pivot_value - 1) > zero_tolerance)
+				{
+					Matrix.ScaleRow(ref full, full.RowPos[pivot_position[0]], pivot_value);
+				}
 
-					// If pivot value is not equal to 1, then divide the row by the pivot_value so that pivot_value = 1.
-					if (Math.Abs(pivot_value - 1) > zero_tolerance)
-					{
-						Matrix.ScaleRow(ref full, full.RowPos[pivot_position[0]], pivot_value);
-					}
-
-					// If pivot is not in the last row, check that all values below it in the column are zero.
-					// If not, then make them zero.
-					if (pivot_position[0] != full.RowCount - 1)
-					{
-						ReduceBelowPivot(ref full, pivot_position);
-					}
+				// If pivot is not in the last row, check that all values below it in the column are zero.
+				// If not, then make them zero.
+				if (pivot_position[0] != full.RowCount - 1)
+				{
+					ReduceBelowPivot(ref full, pivot_position);
 				}
 			}
 
-			else if (pivot_type == "partial")
-			{
+			//if (pivot_type == "none")
+			//{
+				
+			//}
 
-			}
+			//else if (pivot_type == "partial")
+			//{
+			
+			//}
 
-			else if (pivot_type == "scaled partial")
-			{
+			//else if (pivot_type == "scaled partial")
+			//{
 
-			}
+			//}
 
 			BackSubstitution(ref full, pivot_type);
 
 			// Check if the solution vector is a valid one.
 			solution_exists = CheckSolution(A, solution_vector, b);
+			Matrix new_solution_vector = new Matrix(solution_vector.RowCount, solution_vector.ColumnCount);
+			
+			for (int r = 0; r < solution_vector.RowCount; r++)
+			{
+				new_solution_vector.Values[r, 0] = solution_vector.Values[full.RowPos[r], 0];
+			}
 
+			solution_vector = new_solution_vector;
 			return true;
 		}
 
@@ -159,18 +180,37 @@ namespace nvolfango_CA2
 					//Console.Write("{0,7}", (Math.Round(values[r, c], 3)));
 					if (c == 0)
 					{
-						Console.Write("[{0, 3}", A.Values[r, c]);
+						Console.Write("[{0, 3}", A.Values[A.RowPos[r], c]);
 					}
 					else
 					{
-						Console.Write("{0, 7}", A.Values[r, c]);
+						Console.Write("{0, 7}", A.Values[A.RowPos[r], c]);
 					}
 
 				}
-				Console.Write("] [  x{0}  ]{1,4}{2,5}{3,4}{4,3}", r, "=", "[", b.Values[r, 0], "]");
+				Console.Write("] [  x{0}  ]{1,4}{2,5}{3,4}{4,3}", A.RowPos[r], "=", "[", b.Values[A.RowPos[r], 0], "]");
 				Console.WriteLine();
 			}
-			Console.WriteLine("\nWhere your solution matrix is: given by:\n");
+
+			if (solution_exists)
+			{
+				Console.WriteLine("\nWhere your solution matrix is: given by:\n");
+			}
+			else
+			{
+				solution_exists = Solve("none");
+				solution_exists = Solve("partial");
+				solution_exists = Solve("scaled partial");
+
+				if (solution_exists)
+				{
+					Console.WriteLine("\nWhere your solution matrix is: given by:\n");
+				}
+				else
+				{
+					Console.WriteLine("\n Which does not have a valid solution.\n");
+				}
+			}
 
 			for (int r = 0; r < A.RowCount; r++)
 			{
@@ -192,12 +232,6 @@ namespace nvolfango_CA2
 		{
 			double val;
 
-			// If pivot is already in the last row.
-			if (pivot_position[0] == matrix.RowCount)
-			{
-				return;
-			}
-
 			for (int r = pivot_position[0] + 1; r < matrix.RowCount; r++)
 			{
 				val = matrix.Values[matrix.RowPos[r], pivot_position[1]];
@@ -212,26 +246,72 @@ namespace nvolfango_CA2
 			}
 		}
 
-		private int[] FindPivot(ref Matrix matrix, ref int num_of_pivots, int row, int column)
+		private int[] FindPivot(ref Matrix matrix, string pivot_type, ref int num_of_pivots, int row, int column)
 		{
 			int[] pivot_position = new int[2];
-			for (int r = row; r < matrix.RowPos.Length; r++)
+
+			if (pivot_type == "none")
 			{
 				for (int c = column; c < matrix.ColumnCount; c++)
 				{
-					if (Math.Abs(matrix.Values[matrix.RowPos[r], column]) < zero_tolerance)
+					for (int r = row; r < matrix.RowCount; r++)
 					{
-						continue;
+						if (Math.Abs(matrix.Values[matrix.RowPos[r], column]) < zero_tolerance)
+						{
+							continue;
+						}
+						else
+						{
+							num_of_pivots++;
+							pivot_position[0] = r;
+							pivot_position[1] = c;
+							return pivot_position;
+						}
 					}
-					else
+				}
+			}
+
+			else if (pivot_type == "partial")
+			{
+				bool pivot_found = false;
+				double val, max_val = 0;
+
+				for (int c = column; c < matrix.ColumnCount; c++)
+				{
+					for (int r = row; r < matrix.RowCount; r++)
 					{
-						num_of_pivots++;
-						pivot_position[0] = r;
-						pivot_position[1] = c;
+						val = matrix.Values[matrix.RowPos[r], column];
+
+						if (Math.Abs(val) < zero_tolerance)
+						{
+							continue;
+						}
+						else
+						{
+							if (Math.Abs(val) > Math.Abs(max_val))
+							{
+								max_val = val;
+								pivot_position[0] = r;
+								pivot_position[1] = c;
+								pivot_found = true;
+							}							
+						}
+					}
+					if (pivot_found)
+					{
 						return pivot_position;
 					}
 				}
 			}
+
+			else if (pivot_type == "scaled partial")
+			{
+
+			}
+
+
+
+
 			pivot_position[0] = pivot_position[1] = -1;
 			return pivot_position;
 		}
@@ -252,7 +332,7 @@ namespace nvolfango_CA2
 					
 					for (int c = matrix.ColumnCount - 2; c > r; c--)
 					{
-						solution -= matrix.Values[matrix.RowPos[r], c] * solution_vector.Values[c, 0];
+						solution -= matrix.Values[matrix.RowPos[r], c] * solution_vector.Values[matrix.RowPos[c], 0];
 					}
 					solution_vector.Values[matrix.RowPos[r], 0] = solution;
 				}
@@ -472,7 +552,7 @@ namespace nvolfango_CA2
 				for (int c = 0; c < nCols; c++)
 				{
 					//Console.Write("{0,7}", (Math.Round(values[r, c], 3)));
-					Console.Write("{0,7}", values[r, c]);
+					Console.Write("{0,7}", values[row_pos[r], c]);
 				}
 				Console.WriteLine();
 			}
