@@ -23,7 +23,9 @@ namespace nvolfango_CA2
 
 			//system1.Solve("test");
 			system3.Solve("none");
-			system3.PrintLinearSystem();
+			Matrix solution_vector = system3.GetSolution();
+			solution_vector.DisplayMatrix();
+			//system3.PrintLinearSystem();
 			//system2.PrintLinearSystem();
 
 			//Matrix matrix1 = new Matrix(A1);
@@ -60,8 +62,8 @@ namespace nvolfango_CA2
 		Matrix solution_vector;
 		Matrix A;
 		Matrix b;
-		const double zero_tolerance = 1E-16;
-		const double error_tolerance = 1E-14;
+		const double zero_tolerance = 1E-12;
+		const double error_tolerance = 1E-10;
 
 		// Constructors
 		public GElim()
@@ -85,13 +87,13 @@ namespace nvolfango_CA2
 			int[] pivot_position;
 			double pivot_value;
 			double val;
-			int num_of_pivots;
+			int num_of_pivots = 0;
 
 			if (pivot_type == "none")
 			{
+				// Do Gaussian elimination to reduce the matrix A to upper triangular form.
 				for (int c = 0; c < full.ColumnCount; c++)
 				{
-					num_of_pivots = 0;
 					pivot_position = FindPivot(ref full, ref num_of_pivots, c, c);
 
 					// If the current column does not have a valid pivot, move to the next column.
@@ -100,42 +102,44 @@ namespace nvolfango_CA2
 						continue;
 					}
 
-					for (int r = 0; r < full.RowCount; r++)
+					// If next valid pivot is not in the next row, swap the rows.
+					if (num_of_pivots-1 != pivot_position[0])
 					{
-						pivot_value = full.Values[full.RowPos[r], c];
-						if (Math.Abs(pivot_value - 1) > zero_tolerance)
-						{
-							Matrix.ScaleRow(ref full, full.RowPos[r], pivot_value);
-						}
+						full.SwapRows(num_of_pivots - 1, pivot_position[0]);
+						pivot_position[0] = num_of_pivots - 1;
+					}
 
-						// If pivot is not in the last row, check that all values below it in the column are zero.
-						// If not, then make them zero.
-						if (r != full.RowCount - 1)
-						{
-							//ReduceBelowPivot(ref full, pivot_position, pivot_value);
-							for (int r1 = r + 1; r1 < full.RowCount; r1++)
-							{
-								val = full.Values[full.RowPos[r1], c];
-								if (Math.Abs(val) > 0)
-								{
-									for (int c1 = c; c1 < full.ColumnCount; c1++)
-									{
-										full.Values[full.RowPos[r1], c1] -= full.Values[full.RowPos[r1 - 1], c1] * full.Values[full.RowPos[r1], c1];
-									}
-								}
-							}
-						}
+					pivot_value = full.Values[full.RowPos[pivot_position[0]], c];
+
+					// If pivot value is not equal to 1, then divide the row by the pivot_value so that pivot_value = 1.
+					if (Math.Abs(pivot_value - 1) > zero_tolerance)
+					{
+						Matrix.ScaleRow(ref full, full.RowPos[pivot_position[0]], pivot_value);
+					}
+
+					// If pivot is not in the last row, check that all values below it in the column are zero.
+					// If not, then make them zero.
+					if (pivot_position[0] != full.RowCount - 1)
+					{
+						ReduceBelowPivot(ref full, pivot_position);
 					}
 				}
 			}
+
 			else if (pivot_type == "partial")
 			{
 
 			}
+
 			else if (pivot_type == "scaled partial")
 			{
 
 			}
+
+			BackSubstitution(ref full, pivot_type);
+
+			// Check if the solution vector is a valid one.
+			solution_exists = CheckSolution(A, solution_vector, b);
 
 			return true;
 		}
@@ -176,24 +180,38 @@ namespace nvolfango_CA2
 			}
 		}
 
-		public void ReduceBelowPivot(ref Matrix matrix, int[] pivot_position, double pivot_value)
+		// Private Methods
+
+		private bool CheckSolution(Matrix A, Matrix solution_vector, Matrix b)
 		{
+			double error = Matrix.Norm(Matrix.Subtract(Matrix.Multiply(A, solution_vector), b));
+			return (Math.Abs(error) < error_tolerance);
+		}
+
+		private void ReduceBelowPivot(ref Matrix matrix, int[] pivot_position)
+		{
+			double val;
+
 			// If pivot is already in the last row.
 			if (pivot_position[0] == matrix.RowCount)
 			{
 				return;
 			}
 
-			for (int r = pivot_position[0]; r < matrix.RowCount; r++)
+			for (int r = pivot_position[0] + 1; r < matrix.RowCount; r++)
 			{
-				for (int c = pivot_position[1]; c < matrix.ColumnCount; c++)
-				{
+				val = matrix.Values[matrix.RowPos[r], pivot_position[1]];
 
+				if (Math.Abs(val) > zero_tolerance)
+				{
+					for (int c = pivot_position[1]; c < matrix.ColumnCount; c++)
+					{
+						matrix.Values[matrix.RowPos[r], c] -= matrix.Values[matrix.RowPos[pivot_position[0]], c] * val;
+					}
 				}
 			}
 		}
 
-		// Private Methods
 		private int[] FindPivot(ref Matrix matrix, ref int num_of_pivots, int row, int column)
 		{
 			int[] pivot_position = new int[2];
@@ -218,6 +236,29 @@ namespace nvolfango_CA2
 			return pivot_position;
 		}
 
+		private void BackSubstitution(ref Matrix matrix, string pivot_type)
+		{
+			double solution;
+			for (int r = matrix.RowCount - 1; r > -1; r--)
+			{
+				// The solution is exactly the last value on the same row
+				if (r == matrix.RowCount - 1)
+				{
+					solution_vector.Values[matrix.RowPos[r], 0] = matrix.Values[matrix.RowPos[r], matrix.ColumnCount - 1];
+				}
+				else
+				{
+					solution = matrix.Values[matrix.RowPos[r], matrix.ColumnCount - 1];
+					
+					for (int c = matrix.ColumnCount - 2; c > r; c--)
+					{
+						solution -= matrix.Values[matrix.RowPos[r], c] * solution_vector.Values[c, 0];
+					}
+					solution_vector.Values[matrix.RowPos[r], 0] = solution;
+				}
+			}
+		}
+
 	}
 
 
@@ -227,6 +268,22 @@ namespace nvolfango_CA2
 
 
 
+	//////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	//////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	//////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	//////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	//////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	//////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	//////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	//////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	//////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	//////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	//////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	//////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	//////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	//////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	//////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	//////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
 
