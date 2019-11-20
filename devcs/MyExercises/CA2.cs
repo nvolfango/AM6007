@@ -14,10 +14,16 @@ namespace nvolfango_CA2
 			int[,] A2 = new int[,] { { 3, 1, 4, -1 }, { 2, -2, -1, 2 }, { 5, 7, 14, -8 }, { 1, 3, 2, 4 } };
 			int[] b2 = new int[] { 7, 1, 20, -4 };
 
+			int[,] A3 = new int[,] { { 3, -1, 3, 1 }, { 6, 0, 9, -2 }, { -12, 0, -10, 5 }, { 72, -8, 48, -19 } };
+			int[] b3 = new int[] { 6, 13, -17, 93 };
+
 			GElim system1 = new GElim(A1, b1);
 			GElim system2 = new GElim(A2, b2);
+			GElim system3 = new GElim(A3, b3);
 
-			system1.PrintLinearSystem();
+			//system1.Solve("test");
+			system3.Solve("none");
+			system3.PrintLinearSystem();
 			//system2.PrintLinearSystem();
 
 			//Matrix matrix1 = new Matrix(A1);
@@ -51,9 +57,11 @@ namespace nvolfango_CA2
 		// Properties
 		string pivot_type;
 		bool solution_exists = false;
-		Matrix solution;
+		Matrix solution_vector;
 		Matrix A;
 		Matrix b;
+		const double zero_tolerance = 1E-16;
+		const double error_tolerance = 1E-14;
 
 		// Constructors
 		public GElim()
@@ -65,7 +73,7 @@ namespace nvolfango_CA2
 		{
 			this.A = new Matrix(A);
 			this.b = Matrix.ColumnVector(b);
-			this.solution = Matrix.ColumnVector(Matrix.ZeroVector(4));
+			this.solution_vector = Matrix.ColumnVector(Matrix.ZeroVector(4));
 		}
 
 		// Public Methods
@@ -73,12 +81,68 @@ namespace nvolfango_CA2
 		public bool Solve(string pivot_type)
 		{
 			// Must implement Gaussian elimination followed by back substitution
+			Matrix full = Matrix.Join(A, b);
+			int[] pivot_position;
+			double pivot_value;
+			double val;
+			int num_of_pivots;
+
+			if (pivot_type == "none")
+			{
+				for (int c = 0; c < full.ColumnCount; c++)
+				{
+					num_of_pivots = 0;
+					pivot_position = FindPivot(ref full, ref num_of_pivots, c, c);
+
+					// If the current column does not have a valid pivot, move to the next column.
+					if (c != pivot_position[1])
+					{
+						continue;
+					}
+
+					for (int r = 0; r < full.RowCount; r++)
+					{
+						pivot_value = full.Values[full.RowPos[r], c];
+						if (Math.Abs(pivot_value - 1) > zero_tolerance)
+						{
+							Matrix.ScaleRow(ref full, full.RowPos[r], pivot_value);
+						}
+
+						// If pivot is not in the last row, check that all values below it in the column are zero.
+						// If not, then make them zero.
+						if (r != full.RowCount - 1)
+						{
+							//ReduceBelowPivot(ref full, pivot_position, pivot_value);
+							for (int r1 = r + 1; r1 < full.RowCount; r1++)
+							{
+								val = full.Values[full.RowPos[r1], c];
+								if (Math.Abs(val) > 0)
+								{
+									for (int c1 = c; c1 < full.ColumnCount; c1++)
+									{
+										full.Values[full.RowPos[r1], c1] -= full.Values[full.RowPos[r1 - 1], c1] * full.Values[full.RowPos[r1], c1];
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+			else if (pivot_type == "partial")
+			{
+
+			}
+			else if (pivot_type == "scaled partial")
+			{
+
+			}
+
 			return true;
 		}
 
 		public Matrix GetSolution()
 		{
-			return solution;
+			return solution_vector;
 		}
 
 		public void PrintLinearSystem()
@@ -91,29 +155,82 @@ namespace nvolfango_CA2
 					//Console.Write("{0,7}", (Math.Round(values[r, c], 3)));
 					if (c == 0)
 					{
-						Console.Write("[{0, 2}", A.Values[r, c]);
+						Console.Write("[{0, 3}", A.Values[r, c]);
 					}
 					else
 					{
-						Console.Write("{0,5}", A.Values[r, c]);
+						Console.Write("{0, 7}", A.Values[r, c]);
 					}
 
 				}
-				Console.Write("] [ x{0} ]{0,7}{1,5}{2,2} ]", "=", "[", r, b.Values[r, 0]);
+				Console.Write("] [  x{0}  ]{1,4}{2,5}{3,4}{4,3}", r, "=", "[", b.Values[r, 0], "]");
 				Console.WriteLine();
 			}
 			Console.WriteLine("\nWhere your solution matrix is: given by:\n");
 
 			for (int r = 0; r < A.RowCount; r++)
 			{
-				Console.Write("[ x{0} ]", r);
-				Console.Write("{0,7}{1,5}{2,2} ]", "=", "[", solution.Values[r, 0]);
+				Console.Write("[  x{0}  ]", r);
+				Console.Write("{0,4}{1,4}{2,3}  ]", "=", "[", solution_vector.Values[r, 0]);
 				Console.WriteLine();
 			}
 		}
 
+		public void ReduceBelowPivot(ref Matrix matrix, int[] pivot_position, double pivot_value)
+		{
+			// If pivot is already in the last row.
+			if (pivot_position[0] == matrix.RowCount)
+			{
+				return;
+			}
+
+			for (int r = pivot_position[0]; r < matrix.RowCount; r++)
+			{
+				for (int c = pivot_position[1]; c < matrix.ColumnCount; c++)
+				{
+
+				}
+			}
+		}
+
 		// Private Methods
+		private int[] FindPivot(ref Matrix matrix, ref int num_of_pivots, int row, int column)
+		{
+			int[] pivot_position = new int[2];
+			for (int r = row; r < matrix.RowPos.Length; r++)
+			{
+				for (int c = column; c < matrix.ColumnCount; c++)
+				{
+					if (Math.Abs(matrix.Values[matrix.RowPos[r], column]) < zero_tolerance)
+					{
+						continue;
+					}
+					else
+					{
+						num_of_pivots++;
+						pivot_position[0] = r;
+						pivot_position[1] = c;
+						return pivot_position;
+					}
+				}
+			}
+			pivot_position[0] = pivot_position[1] = -1;
+			return pivot_position;
+		}
+
 	}
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -122,8 +239,33 @@ namespace nvolfango_CA2
 		// Properties
 		private int nRows, nCols;
 		private double[,] values;
+		private int[] row_pos;
 		const double zero_tolerance = 1E-16;
 		const double error_tolerance = 1E-14;
+
+
+		// Getters/Setters
+		public int RowCount
+		{
+			get { return nRows; }
+		}
+
+		public int ColumnCount
+		{
+			get { return nCols; }
+		}
+
+		public int[] RowPos
+		{
+			get { return row_pos; }
+		}
+
+		public double[,] Values
+		{
+			get { return values; }
+			set { values = value; }
+		}
+
 
 		// Constructor with no inputs
 		public Matrix()
@@ -137,6 +279,7 @@ namespace nvolfango_CA2
 			this.nRows = nRows;
 			this.nCols = nCols;
 			values = new double[nRows, nCols];
+			row_pos = Enumerable.Range(0, nRows).ToArray();
 		}
 
 
@@ -146,6 +289,7 @@ namespace nvolfango_CA2
 			this.values = values;
 			nRows = values.GetLength(0);
 			nCols = values.GetLength(1);
+			row_pos = Enumerable.Range(0, nRows).ToArray();
 		}
 
 		// Constructor for when the matrix values are known beforehand (given as array of ints)
@@ -162,27 +306,11 @@ namespace nvolfango_CA2
 			this.values = double_values;
 			nRows = values.GetLength(0);
 			nCols = values.GetLength(1);
+			row_pos = Enumerable.Range(0, nRows).ToArray();
 		}
 
 
-		// Getters/Setters
-		public int RowCount
-		{
-			get { return nRows; }
-		}
-
-		public int ColumnCount
-		{
-			get { return nCols; }
-		}
-
-		public double[,] Values
-		{
-			get { return values; }
-			set { values = value; }
-		}
-
-
+		
 		// Public Methods
 
 		// Zero vector
@@ -255,6 +383,30 @@ namespace nvolfango_CA2
 		}
 
 
+		public static Matrix Join(Matrix X, Matrix Y)
+		{
+			Matrix new_matrix = new Matrix(X.nRows, X.nCols + Y.nCols);
+
+			for (int r = 0; r < X.nRows; r++)
+			{
+				for (int c = 0; c < X.nCols; c++)
+				{
+					new_matrix.values[r, c] = X.values[r, c];
+				}
+			}
+
+			for (int r = 0; r < X.nRows; r++)
+			{
+				for (int c = 0; c < Y.nCols; c++)
+				{
+					new_matrix.values[r, c + X.nCols] = Y.values[r, c];
+				}
+			}
+
+			return new_matrix;
+		}
+
+
 		public void DisplayMatrix()
 		{
 			Console.WriteLine();
@@ -305,53 +457,11 @@ namespace nvolfango_CA2
 			}
 		}
 
-
 		public void SwapRows(int r1, int r2)
 		{
-			if (r1 >= nRows)
-			{
-				Console.WriteLine("Error: Invalid first argument");
-				Environment.Exit(-1);
-			}
-			else if (r2 >= nRows)
-			{
-				Console.WriteLine("Error: Invalid second argument");
-				Environment.Exit(-1);
-			}
-
-			double tmp;
-
-			for (int c = 0; c < nCols; c++)
-			{
-				tmp = values[r1, c];
-				values[r1, c] = values[r2, c];
-				values[r2, c] = tmp;
-			}
-
-		}
-
-
-		public void SwapColumns(int c1, int c2)
-		{
-			if (c1 >= nCols)
-			{
-				Console.WriteLine("Error: Invalid first argument");
-				Environment.Exit(-1);
-			}
-			else if (c2 >= nCols)
-			{
-				Console.WriteLine("Error: Invalid second argument");
-				Environment.Exit(-1);
-			}
-
-			double tmp;
-
-			for (int r = 0; r < nRows; r++)
-			{
-				tmp = values[r, c1];
-				values[r, c1] = values[r, c2];
-				values[r, c2] = tmp;
-			}
+			int temp = row_pos[r1];
+			row_pos[r1] = row_pos[r2];
+			row_pos[r2] = temp;
 		}
 
 
