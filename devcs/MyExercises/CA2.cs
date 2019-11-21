@@ -1,75 +1,114 @@
-﻿using System;
-using System.IO;
+﻿/*
+ * Developer's note to Akshay...:
+ *		In the Main method, I have put in a total of 5 test cases. The first two are the given tests cases, which I solve via Gaussian Elimination (using all three pivoting strategies).
+ * The last three test cases are directly for the Jacobi and Gauss-Seidel methods because I have not put in a function that makes the matrix diagonally dominant first before running
+ * the methods, and so the Jacobi and Gauss Seidel fail for the first two test cases and work for the last three. I have also used Gaussian Elimination on the last three test cases
+ * to confirm that the Jacobi/Gauss-Seidel solutions are correct.
+ */
+
+using System;
 using System.Linq;
 
 namespace nvolfango_CA2
 {
 	class MainClass
 	{
-		public static void MainProgram()
+		public static void Main()
 		{
+			// Test cases
 			int[,] A1 = new int[,] { { 1, 1, 1, 1 }, { 1, 1, 2, 3 }, { -1, 0, 2, 1 }, { 3, 2, -1, 0 } };
 			int[] b1 = new int[] { 1, 2, 1, 1 };
 
 			int[,] A2 = new int[,] { { 3, 1, 4, -1 }, { 2, -2, -1, 2 }, { 5, 7, 14, -8 }, { 1, 3, 2, 4 } };
 			int[] b2 = new int[] { 7, 1, 20, -4 };
 
-			int[,] A3 = new int[,] { { 3, -1, 3, 1 }, { 6, 0, 9, -2 }, { -12, 0, -10, 5 }, { 72, -8, 48, -19 } };
-			int[] b3 = new int[] { 6, 13, -17, 93 };
-
 			GElim system1 = new GElim(A1, b1);
 			GElim system2 = new GElim(A2, b2);
+
+			// Test case #1
+			Console.WriteLine("Test Case 1:");
+			system1.PrintLinearSystem("none");
+			system1.PrintLinearSystem("partial");
+			system1.PrintLinearSystem("scaled partial");
+			Matrix system1_solution = system1.GetSolution("scaled partial");
+			Console.WriteLine("\n\nSolution vector for first test case:");
+			system1_solution.DisplayMatrix();
+			Console.Write("Is there a valid solution? ");
+			Console.WriteLine(system1.Solve("scaled partial"));
+
+			Console.WriteLine("\n\n\n");
+
+			// Test case #2
+			Console.WriteLine("Test Case 2:");
+			system2.PrintLinearSystem("none");
+			system2.PrintLinearSystem("partial");
+			system2.PrintLinearSystem("scaled partial");
+			Matrix system2_solution = system2.GetSolution("scaled partial");
+			Console.WriteLine("\n\nSolution vector for first second case:");
+			system2_solution.DisplayMatrix();
+			Console.Write("Is there a valid solution? ");
+			Console.WriteLine(system2.Solve("scaled partial"));
+
+			Console.WriteLine("\n\n\n");
+
+			// Jacobi and Gauss-Seidel Method
+
+			Matrix matrix_1 = new Matrix(new double[,] { { 19, 10, 39 }, { -3, -16, -35 } });
+			Matrix matrix_2 = new Matrix(new double[,] { { 10, 2, 3, 23 }, { 5, 25, 7, 76 }, { 9, 10, 32, 125 } });
+			Matrix matrix_3 = new Matrix(new double[,] { { 10, 2, 3, 4, 39 }, { 5, 25, 7, 8, 108 }, { 9, 10, 32, 12, 173 }, { 13, 14, 15, 50, 286 } });
+
+			int[,] A3 = new int[,] { { 19, 10 }, { -3, -16 } };
+			int[] b3 = new int[] { 39, -35 };
+
+			int[,] A4 = new int[,] { { 10, 2, 3 }, { 5, 25, 7 }, { 9, 10, 32 } };
+			int[] b4 = new int[] { 23, 76, 125 };
+
+			int[,] A5 = new int[,] { { 10, 2, 3, 4 }, { 5, 25, 7, 8 }, { 9, 10, 32, 12 }, { 13, 14, 15, 50 } };
+			int[] b5 = new int[] { 39, 108, 173, 286 };
+
 			GElim system3 = new GElim(A3, b3);
+			GElim system4 = new GElim(A4, b4);
+			GElim system5 = new GElim(A5, b5);
 
-			system1.PrintLinearSystem();
-			system1.Solve("none");
-			//system1.GetSolution().DisplayMatrix();
 
-			system2.PrintLinearSystem();
-			system2.Solve("none");
-			//system2.GetSolution().DisplayMatrix();
+			// Test case #3
+			Console.WriteLine("\n\nTest Case 3:");
+			Matrix Jsolution_matrix1 = Matrix.Solve(matrix_1, "Jacobi");
+			Jsolution_matrix1.DisplayMatrix();
+			Matrix GSsolution_matrix1 = Matrix.Solve(matrix_1, "Gauss-Seidel");
+			GSsolution_matrix1.DisplayMatrix();
+			system3.PrintLinearSystem("scaled partial");
 
-			system3.PrintLinearSystem();
-			system3.Solve("none");
-			//system3.GetSolution().DisplayMatrix();
-			
 
-			//Matrix matrix1 = new Matrix(A1);
-			//Matrix matrix1_answer = Matrix.ColumnVector(b1);
-			//Matrix matrix2 = new Matrix(A2);
-			//Matrix matrix2_answer = Matrix.ColumnVector(b2);
-			//matrix1.DisplayMatrix();
-			//matrix1_answer.DisplayMatrix();
-			//matrix2.DisplayMatrix();
-			//matrix2_answer.DisplayMatrix();
+			// Test case #4
+			Console.WriteLine("\n\nTest Case 4:");
+			Matrix Jsolution_matrix2 = Matrix.Solve(matrix_2, "Jacobi");
+			Jsolution_matrix2.DisplayMatrix();
+			Matrix GSsolution_matrix2 = Matrix.Solve(matrix_2, "Gauss-Seidel");
+			GSsolution_matrix2.DisplayMatrix();
+			system4.PrintLinearSystem("scaled partial");
 
-			//Matrix GEsolution_matrix1 = Matrix.Solve(matrix, "Gaussian Elimination");
-			//GEsolution_matrix1.DisplayMatrix();
+			// Test case #5
+			Console.WriteLine("\n\nTest Case 5:");
+			Matrix Jsolution_matrix3 = Matrix.Solve(matrix_3, "Jacobi");
+			Jsolution_matrix3.DisplayMatrix();
+			Matrix GSsolution_matrix3 = Matrix.Solve(matrix_3, "Gauss-Seidel");
+			GSsolution_matrix3.DisplayMatrix();
+			system5.PrintLinearSystem("scaled partial");
 
-			//Matrix GEsolution_matrix2 = Matrix.Solve(matrix, "Gaussian Elimination - partial");
-			//GEsolution_matrix2.DisplayMatrix();
-
-			//Matrix GEsolution_matrix3 = Matrix.Solve(matrix, "Gaussian Elimination - scaled partial");
-			//GEsolution_matrix3.DisplayMatrix();
-
-			//Matrix Jsolution_matrix = Matrix.Solve(matrix, "Jacobi");
-			//Jsolution_matrix.DisplayMatrix();
-
-			//Matrix GSsolution_matrix = Matrix.Solve(matrix, "Gauss-Seidel");
-			//GSsolution_matrix.DisplayMatrix();		
 		}
 	}
 
 	class GElim
 	{
 		// Properties
-		string pivot_type;
-		bool solution_exists = false;
-		Matrix solution_vector;
-		Matrix A;
-		Matrix b;
-		const double zero_tolerance = 1E-12;
-		const double error_tolerance = 1E-10;
+		bool solution_exists;
+		Matrix solution_vector;					// Vector that will contain the solution matrix/vector for the system of linear equations
+		Matrix A;								// Coefficient matrix
+		Matrix b;								// Right-hand side vector
+		Matrix vector_of_largest_elements;		// Used for G.E. with partial scaling pivoting
+		const double zero_tolerance = 1E-12;	// Used to determine if a value is zero
+		const double error_tolerance = 1E-10;	// Used to determione if error of a solution is zero
 
 		// Constructors
 		public GElim()
@@ -81,29 +120,29 @@ namespace nvolfango_CA2
 		{
 			this.A = new Matrix(A);
 			this.b = Matrix.ColumnVector(b);
-			this.solution_vector = Matrix.ColumnVector(Matrix.ZeroVector(4));
 		}
 
 		// Public Methods
-
+		// Tries to solve the system of linear equations given by A*(solution_vector) = b.
+		// Returns true if a satisfactory solution has been found.
 		public bool Solve(string pivot_type)
 		{
-			if (solution_exists)
+			solution_exists = false;
+
+			if (pivot_type == "scaled partial")
 			{
-				return true;
+				vector_of_largest_elements = GetLargestElements(A);
 			}
 
-			// Must implement Gaussian elimination followed by back substitution
 			Matrix full = Matrix.Join(A, b);
 			int[] pivot_position;
 			double pivot_value;
-			double val;
 			int num_of_pivots = 0;
+			solution_vector = Matrix.ColumnVector(Matrix.ZeroVector(A.ColumnCount));
 
 			// Do Gaussian elimination to reduce the matrix A to upper triangular form.
 			for (int c = 0; c < full.ColumnCount; c++)
 			{
-				//full.DisplayMatrix();
 				pivot_position = FindPivot(ref full, pivot_type, ref num_of_pivots, c, c);
 
 				// If the current column does not have a valid pivot, move to the next column.
@@ -135,27 +174,14 @@ namespace nvolfango_CA2
 				}
 			}
 
-			//if (pivot_type == "none")
-			//{
-				
-			//}
-
-			//else if (pivot_type == "partial")
-			//{
-			
-			//}
-
-			//else if (pivot_type == "scaled partial")
-			//{
-
-			//}
-
+			// Do back substitution on the upper triangular matrix to obtain the solution.
 			BackSubstitution(ref full, pivot_type);
 
 			// Check if the solution vector is a valid one.
 			solution_exists = CheckSolution(A, solution_vector, b);
 			Matrix new_solution_vector = new Matrix(solution_vector.RowCount, solution_vector.ColumnCount);
-			
+
+			// Swaps values around in the solution vector in the correct order (due to row swapping).
 			for (int r = 0; r < solution_vector.RowCount; r++)
 			{
 				new_solution_vector.Values[r, 0] = solution_vector.Values[full.RowPos[r], 0];
@@ -165,11 +191,13 @@ namespace nvolfango_CA2
 			return true;
 		}
 
-		public Matrix GetSolution()
+		public Matrix GetSolution(string pivot_type)
 		{
+			Solve(pivot_type);
 			return solution_vector;
 		}
 
+		// Prints the equation consisting of matrices without solving it.
 		public void PrintLinearSystem()
 		{
 			Console.WriteLine("\nYour system of equations is as follows:\n");
@@ -191,27 +219,44 @@ namespace nvolfango_CA2
 				Console.Write("] [  x{0}  ]{1,4}{2,5}{3,4}{4,3}", A.RowPos[r], "=", "[", b.Values[A.RowPos[r], 0], "]");
 				Console.WriteLine();
 			}
+		}
+
+		// Prints the equation consisting of matrices, solves it and then prints out the solution.
+		public void PrintLinearSystem(string pivot_type)
+		{
+			Console.WriteLine("\nYour system of equations is as follows:\n");
+			for (int r = 0; r < A.RowCount; r++)
+			{
+				for (int c = 0; c < A.ColumnCount; c++)
+				{
+					//Console.Write("{0,7}", (Math.Round(values[r, c], 3)));
+					if (c == 0)
+					{
+						Console.Write("[{0, 3}", A.Values[A.RowPos[r], c]);
+					}
+					else
+					{
+						Console.Write("{0, 7}", A.Values[A.RowPos[r], c]);
+					}
+
+				}
+				Console.Write("] [  x{0}  ]{1,4}{2,5}{3,4}{4,3}", A.RowPos[r], "=", "[", b.Values[A.RowPos[r], 0], "]");
+				Console.WriteLine();
+			}
+
+			solution_exists = Solve(pivot_type);
 
 			if (solution_exists)
 			{
-				Console.WriteLine("\nWhere your solution matrix is: given by:\n");
+				Console.WriteLine("\nWhere your solution matrix (solved via '{0}' pivoting strategy) is given by:\n", pivot_type);
 			}
 			else
 			{
-				solution_exists = Solve("none");
-				solution_exists = Solve("partial");
-				solution_exists = Solve("scaled partial");
-
-				if (solution_exists)
-				{
-					Console.WriteLine("\nWhere your solution matrix is: given by:\n");
-				}
-				else
-				{
-					Console.WriteLine("\n Which does not have a valid solution.\n");
-				}
+				Console.WriteLine("\n Which does not have a valid solution.\n");
+				return;
 			}
-
+			
+			// Print out solution_vector values
 			for (int r = 0; r < A.RowCount; r++)
 			{
 				Console.Write("[  x{0}  ]", r);
@@ -221,13 +266,14 @@ namespace nvolfango_CA2
 		}
 
 		// Private Methods
-
+		// Checks if the solution vector (X) is good enough as a solution to the equation A*X = b
 		private bool CheckSolution(Matrix A, Matrix solution_vector, Matrix b)
 		{
 			double error = Matrix.Norm(Matrix.Subtract(Matrix.Multiply(A, solution_vector), b));
 			return (Math.Abs(error) < error_tolerance);
 		}
 
+		// Does elementary row operations to turn all values below the pivot to zero.
 		private void ReduceBelowPivot(ref Matrix matrix, int[] pivot_position)
 		{
 			double val;
@@ -246,6 +292,7 @@ namespace nvolfango_CA2
 			}
 		}
 
+		// Finds the next valid pivot in the matrix, starting from the value in the given row and column
 		private int[] FindPivot(ref Matrix matrix, string pivot_type, ref int num_of_pivots, int row, int column)
 		{
 			int[] pivot_position = new int[2];
@@ -256,12 +303,14 @@ namespace nvolfango_CA2
 				{
 					for (int r = row; r < matrix.RowCount; r++)
 					{
+						// If current value is zero, continue to the next value.
 						if (Math.Abs(matrix.Values[matrix.RowPos[r], column]) < zero_tolerance)
 						{
 							continue;
 						}
 						else
 						{
+							// Once a non-zero value is found, this value will be the next pivot in the elimination.
 							num_of_pivots++;
 							pivot_position[0] = r;
 							pivot_position[1] = c;
@@ -282,40 +331,79 @@ namespace nvolfango_CA2
 					{
 						val = matrix.Values[matrix.RowPos[r], column];
 
+						// If current value is zero, continue to the next value.
 						if (Math.Abs(val) < zero_tolerance)
 						{
 							continue;
 						}
 						else
 						{
+							// If a non-zero value is found that is the biggest value found so far, the max value is updated to this value
+							// and the pivot position is set to be this value.
 							if (Math.Abs(val) > Math.Abs(max_val))
 							{
 								max_val = val;
 								pivot_position[0] = r;
 								pivot_position[1] = c;
 								pivot_found = true;
-							}							
+							}
 						}
 					}
+					// Once all values have been checked, the returned pivot_position will be the greatest value in the column.
 					if (pivot_found)
 					{
+						num_of_pivots++;
 						return pivot_position;
 					}
 				}
 			}
 
+			// Note that this is exactly the same as for 'partial', with the only difference being that each value checked in the iteration
+			// is first divided by the greatest value along the row of the original coefficient matrix.
 			else if (pivot_type == "scaled partial")
 			{
+				bool pivot_found = false;
+				double val, max_val = 0;
 
+				for (int c = column; c < matrix.ColumnCount; c++)
+				{
+					for (int r = row; r < matrix.RowCount; r++)
+					{
+						val = matrix.Values[matrix.RowPos[r], column] / vector_of_largest_elements.Values[matrix.RowPos[r], 0];
+
+						// If current value is zero, continue to the next value.
+						if (Math.Abs(val) < zero_tolerance)
+						{
+							continue;
+						}
+						else
+						{
+							// If a non-zero value is found that is the biggest value found so far, the max value is updated to this value
+							// and the pivot position is set to be this value.
+							if (Math.Abs(val) > Math.Abs(max_val))
+							{
+								max_val = val;
+								pivot_position[0] = r;
+								pivot_position[1] = c;
+								pivot_found = true;
+							}
+						}
+					}
+					// Once all values have been checked, the returned pivot_position will be the greatest value in the column.
+					if (pivot_found)
+					{
+						num_of_pivots++;
+						return pivot_position;
+					}
+				}
 			}
-
-
-
 
 			pivot_position[0] = pivot_position[1] = -1;
 			return pivot_position;
 		}
 
+
+		// Does back subtitution on the given (upper triangular) matrix and populates solution_vector with the correct values.
 		private void BackSubstitution(ref Matrix matrix, string pivot_type)
 		{
 			double solution;
@@ -329,7 +417,7 @@ namespace nvolfango_CA2
 				else
 				{
 					solution = matrix.Values[matrix.RowPos[r], matrix.ColumnCount - 1];
-					
+
 					for (int c = matrix.ColumnCount - 2; c > r; c--)
 					{
 						solution -= matrix.Values[matrix.RowPos[r], c] * solution_vector.Values[matrix.RowPos[c], 0];
@@ -339,36 +427,30 @@ namespace nvolfango_CA2
 			}
 		}
 
+		// This is used when the (Gaussian Elimination) pivoting strategy is 'scaled partial'.
+		// This returns a vector of values that are the biggest (in absolute value) values in their respective row in the coefficient matrix.
+		private Matrix GetLargestElements(Matrix matrix)
+		{
+			Matrix vector_of_largest_elements = new Matrix(matrix.RowCount, 1);
+			double row_max;
+
+			for (int r = 0; r < matrix.RowCount; r++)
+			{
+				row_max = 0;
+				for (int c = 0; c < matrix.ColumnCount; c++)
+				{
+					if (matrix.Values[r, c] > row_max)
+					{
+						row_max = matrix.Values[r, c];
+					}
+				}
+				vector_of_largest_elements.Values[r, 0] = row_max;
+			}
+
+			return vector_of_largest_elements;
+		}
+
 	}
-
-
-
-
-
-
-
-
-	//////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	//////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	//////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	//////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	//////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	//////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	//////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	//////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	//////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	//////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	//////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	//////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	//////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	//////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	//////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	//////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-
-
-
 
 
 	class Matrix
@@ -376,7 +458,7 @@ namespace nvolfango_CA2
 		// Properties
 		private int nRows, nCols;
 		private double[,] values;
-		private int[] row_pos;
+		private int[] row_pos;					// Indicates the positions of each row in the matrix. This is used to make row swapping more efficient
 		const double zero_tolerance = 1E-16;
 		const double error_tolerance = 1E-14;
 
@@ -447,7 +529,6 @@ namespace nvolfango_CA2
 		}
 
 
-		
 		// Public Methods
 
 		// Zero vector
@@ -473,7 +554,7 @@ namespace nvolfango_CA2
 		public static Matrix RowVector(double[] values)
 		{
 			Matrix row_vector = new Matrix(1, values.Length);
-			
+
 			for (int c = 0; c < values.Length; c++)
 			{
 				row_vector.values[0, c] = values[c];
@@ -519,11 +600,12 @@ namespace nvolfango_CA2
 			return column_vector;
 		}
 
-
+		// Column-wise joining of matrix X and matrix Y
 		public static Matrix Join(Matrix X, Matrix Y)
 		{
 			Matrix new_matrix = new Matrix(X.nRows, X.nCols + Y.nCols);
 
+			// Fill with values from matrix X
 			for (int r = 0; r < X.nRows; r++)
 			{
 				for (int c = 0; c < X.nCols; c++)
@@ -532,6 +614,7 @@ namespace nvolfango_CA2
 				}
 			}
 
+			// Fill with values from matrix Y
 			for (int r = 0; r < X.nRows; r++)
 			{
 				for (int c = 0; c < Y.nCols; c++)
@@ -543,7 +626,7 @@ namespace nvolfango_CA2
 			return new_matrix;
 		}
 
-
+		// Prints out values of Matrix object in a nice format
 		public void DisplayMatrix()
 		{
 			Console.WriteLine();
@@ -559,41 +642,7 @@ namespace nvolfango_CA2
 			Console.WriteLine();
 		}
 
-
-		public void Transpose()
-		{
-			double tmp;
-
-			if (nRows == nCols)
-			{
-				for (int r = 0; r < nRows; r++)
-				{
-					for (int c = r + 1; c < nCols; c++)
-					{
-						tmp = values[r, c];
-						values[r, c] = values[c, r];
-						values[c, r] = tmp;
-					}
-				}
-			}
-			else
-			{
-				double[,] new_values = new double[nCols, nRows];
-				nRows = new_values.GetLength(0);
-				nCols = new_values.GetLength(1);
-
-				for (int r = 0; r < nRows; r++)
-				{
-					for (int c = 0; r < nCols; c++)
-					{
-						new_values[c, r] = values[r, c];
-					}
-				}
-
-				values = new_values;
-			}
-		}
-
+		// Swaps the row positions of two rows in the Matrix object
 		public void SwapRows(int r1, int r2)
 		{
 			int temp = row_pos[r1];
@@ -734,8 +783,13 @@ namespace nvolfango_CA2
 						if (divergence_count == max_divergence_count)
 						{
 							Console.WriteLine("Error: The solution is diverging.");
+							Console.WriteLine("number of iterations: {0}", iters);
 							Environment.Exit(-1);
 						}
+					}
+					else
+					{
+						divergence_count = 0;
 					}
 					x0.values = x1.values;
 
@@ -743,7 +797,8 @@ namespace nvolfango_CA2
 					error1 = error2;
 				}
 				while ((iters < max_iters) & (Math.Abs(error2) > error_tolerance));
-				Console.WriteLine("iters = {0}", iters);
+				Console.WriteLine("\nJacobi solution:");
+				Console.WriteLine("number of iterations: {0}", iters);
 				Console.WriteLine("error: {0}", error2);
 			}
 			else if (method == "Gauss-Seidel")
@@ -773,7 +828,7 @@ namespace nvolfango_CA2
 					if (divergence_count == max_divergence_count)
 					{
 						Console.WriteLine("Error: The solution is diverging.");
-						Console.WriteLine("iters: {0}", iters);
+						Console.WriteLine("number of iterations: {0}", iters);
 						Environment.Exit(-1);
 					}
 					x0.Values = x1.Values;
@@ -786,7 +841,8 @@ namespace nvolfango_CA2
 					}
 				}
 				while (iters < max_iters & Math.Abs(error2) > zero_tolerance);
-				Console.WriteLine("iters = {0}", iters);
+				Console.WriteLine("\nGauss-Seidel solution:");
+				Console.WriteLine("number of iterations: {0}", iters);
 				Console.WriteLine("error: {0}", error2);
 			}
 
@@ -885,44 +941,6 @@ namespace nvolfango_CA2
 		}
 
 
-		public static bool IsDiagonallyDominant(Matrix matrix)
-		{
-			ulong absolute_diagonal_value;
-			ulong absolute_sum;
-
-			// Check if matrix is square
-			if (matrix.nRows != matrix.nCols - 1)
-			{
-				return false;
-			}
-
-			// For each row, calculate absolute value of the diagonal element and of the
-			// sum of the other values in the row
-			for (int r = 0; r < matrix.nRows; r++)
-			{
-				absolute_diagonal_value = (ulong)Math.Abs(matrix.Values[r, r]);
-				absolute_sum = 0;
-
-				for (int c = 0; c < matrix.nCols - 1; c++)
-				{
-					if (c != r)
-					{
-						absolute_sum += (ulong)Math.Abs(matrix.Values[r, c]);
-					}
-				}
-
-				// If a row is found that fails the criterion, then matrix is not diagonally dominant.
-				if (absolute_diagonal_value < absolute_sum)
-				{
-					return false;
-				}
-			}
-
-			// If the algorithm reaches this point, then it remains that the matrix is diagonally dominant.
-			return true;
-		}
-
-
 		//Calculates the norm of a vector
 		public static double Norm(Matrix vector)
 		{
@@ -937,32 +955,6 @@ namespace nvolfango_CA2
 			norm = Math.Sqrt(sum);
 
 			return norm;
-		}
-
-
-		public static bool IsSymmetric(Matrix matrix)
-		{
-			// Check if matrix is square
-			if (matrix.nRows != matrix.nCols - 1)
-			{
-				return false;
-			}
-
-			// For each value in the upper triangle, check if it is equal to 
-			//the corresponding value in the lower triangle.
-			for (int r = 0; r < matrix.nRows; r++)
-			{
-				for (int c = r + 1; c < matrix.nCols - 1; c++)
-				{
-					if (matrix.Values[r, c] != matrix.Values[c, r])
-					{
-						return false;
-					}
-				}
-			}
-
-			// If no 'unequal' terms are found, the obvious result is that the matrix is symmetric.
-			return true;
 		}
 
 
@@ -1010,56 +1002,5 @@ namespace nvolfango_CA2
 				matrix.Values[row, c] /= scale_value;
 			}
 		}
-
-		//public static Matrix Submatrix(Matrix matrix, int excluded_row, int excluded_column)
-		//{
-		//	Matrix submatrix = new Matrix(matrix.nRows-1, matrix.nCols-1);
-		//	int r1 = 0;
-		//	int c1;
-
-		//	for (int r = 0; r < matrix.nRows; r++)
-		//	{
-		//		c1 = 0;
-		//		for (int c = 0; c < matrix.nCols; c++)
-		//		{
-		//			if ((r == excluded_row) | (c == excluded_column))
-		//			{
-		//				continue;
-		//			}
-		//			else
-		//			{
-		//				submatrix.Values[r1, c1] = matrix.Values[r, c];
-		//			}
-		//			if (c != excluded_column) c1++;
-		//		}
-		//		if (r != excluded_row) r1++;
-		//	}
-
-		//	return submatrix;
-		//}
-
-		//public static double Determinant(Matrix matrix)
-		//{
-		//	if (matrix.nRows != matrix.nCols)
-		//	{
-		//		Console.WriteLine("Error: Matrix has no determinant.");
-		//		Environment.Exit(-1);
-		//	}
-		//	double determinant = 0;
-		//	double coefficient;
-
-		//	if *matrix.nRows 
-
-		//	for (int r = 0; r < matrix.nRows; r++)
-		//	{
-		//		for (int c = 0; c < matrix.nCols; c++)
-		//		{
-		//			coefficient = c % 2 == 0 ? matrix.Values[r, c] : -matrix.Values[r, c];
-		//			return (coefficient * Determinant(Submatrix(matrix, r, c)));
-		//		}
-		//	}
-
-		//	return determinant;
-		//}
 	}
 }
